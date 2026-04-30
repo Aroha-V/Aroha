@@ -2,7 +2,7 @@ from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from chromadb import PersistentClient
 import os
 import pandas as pd
-df=pd.read_csv(r'C:\Users\kumar\Desktop\KVKDEV\Aroha\KVK\data_folder\data.csv')
+df=pd.read_csv(rf'{os.getcwd()}\Aroha\KVK\data_folder\data.csv')
 clt=PersistentClient(path=rf'{os.getcwd()}\Aroha\KVK\rag')
 documents=[]
 ids=[]
