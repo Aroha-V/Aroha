@@ -3,7 +3,7 @@ from chromadb import PersistentClient
 import os
 import pandas as pd
 df=pd.read_csv(rf'{os.getcwd()}\Aroha\KVK\data_folder\data.csv')
-clt=PersistentClient(path=rf'{os.getcwd()}\Aroha\KVK\rag')
+clt=PersistentClient(path=rf'{os.getcwd()}\Aroha\KVK\rag\db')
 documents=[]
 ids=[]
 metadatas=[]
@@ -13,7 +13,6 @@ try:
     collection=clt.get_collection(name=collection_name)
 except Exception as e:
     collection=clt.create_collection(name=collection_name,embedding_function=embedding_function)
-chunks=[]
 counter=0
 dict_var = {}
 for index in range(len(df)):
@@ -46,7 +45,7 @@ Action Taken To Mitigate the Incident:
     counter += 1
 collection.add(ids=ids,documents=documents,metadatas=metadatas)
 def return_context(query):
-    results=collection.query(query_texts=[query],n_results=3)
+    results=collection.query(query_texts=[query],n_results=15)
     if not results["documents"] or not results["documents"][0]:
         return "query_error"
     retrieved_chunks=results["documents"][0]

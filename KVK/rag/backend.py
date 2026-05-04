@@ -1,6 +1,8 @@
 from flask import Flask,render_template,request,jsonify
-from Aroha.KVK.rag.return_context import return_context
+from return_context import return_context
 import ollama
+with open(r'C:\Users\kumar\Desktop\KVKDEV\Aroha\KVK\rag\apikey.txt','r+') as mf:
+    apikey=mf.readline()
 app=Flask(__name__)
 user_message_arr=[]
 bot_answer_arr=[]
@@ -29,11 +31,17 @@ def chatbot():
                 - Do NOT make assumptions or add extra information.
                 Answer:
             """
-        response=ollama.generate(
-            model='qwen2.5:0.5b',
-            prompt=prompt
+        messages = [
+            {
+                'role': 'user',
+                'content':prompt,
+            },
+        ]
+        response=ollama.Client(host='https://ollama.com',headers={'Authorization': 'Bearer ' + apikey}).chat(
+            model='gpt-oss:120b',
+            messages=messages
         )
         print(context)
-        bot_answer=response['response']
+        bot_answer=response['message']['content']
         return jsonify(str(bot_answer).strip('/n').strip('/n/n'))
 app.run(debug=True,port=2000)
