@@ -357,106 +357,242 @@ MONTH_TICKS = {1:"Jan",5:"Feb",9:"Mar",14:"Apr",18:"May",22:"Jun",
                27:"Jul",31:"Aug",36:"Sep",40:"Oct",44:"Nov",49:"Dec"}
 
 
-def build_disease_heatmap(disease_weekly: pd.DataFrame, state: str, current_week: int,
-                          raw_df: pd.DataFrame = None) -> go.Figure:
-    """
-    Seasonal heatmap: rows = top diseases (by total cases in that state)
-    columns = weeks 1-52. Each disease uses its own colour scale.
-    Falls back to raw_df if disease_weekly has no data for the state.
-    """
-    state_df = disease_weekly[disease_weekly["State/UT"] == state]
-
-    # If no aggregated data, try to rebuild from raw data
-    if state_df.empty and raw_df is not None:
-        state_df = raw_df[raw_df["State/UT"] == state].groupby(
-            ["Week", "Disease/Illness"]
-        )["No. of Cases"].sum().reset_index()
-        state_df = state_df.rename(columns={"Disease/Illness": "disease", "No. of Cases": "cases"})
-
-    if state_df.empty:
-        # No data at all for this state – show placeholder
-        fig = go.Figure()
-        fig.add_annotation(text="No disease data available", showarrow=False,
-                           font=dict(color="#718096"))
-        fig.update_layout(paper_bgcolor="#0d1526", plot_bgcolor="#0d1526", height=200)
-        return fig
-
-    # Get top diseases (by total cases across all weeks)
-    disease_totals = state_df.groupby("disease")["cases"].sum().sort_values(ascending=False)
-    top_diseases = disease_totals.head(6).index.tolist()
-
-    all_weeks = list(range(1, 53))
-    fig = go.Figure()
-
-    for disease in top_diseases:
-        d_df = state_df[state_df["disease"] == disease][["Week", "cases"]]
-        week_cases = dict(zip(d_df["Week"], d_df["cases"]))
-        z_row = [week_cases.get(w, 0) for w in all_weeks]
-
-        # Normalise row (0 → 1) for consistent within‑row intensity
-        row_max = max(z_row) if max(z_row) > 0 else 1
-        z_norm = [v / row_max for v in z_row]
-
-        # If all values are zero, use a neutral grey colour scale
-        if all(v == 0 for v in z_row):
-            cs = [[0, "#2d3748"], [1, "#2d3748"]]
-        else:
-            cs = DISEASE_COLORSCALES.get(disease, DEFAULT_COLORSCALE)
-
-        fig.add_trace(go.Heatmap(
-            z=[z_norm],
-            x=all_weeks,
-            y=[disease],
-            colorscale=cs,
-            zmin=0, zmax=1,
-            showscale=False,
-            xgap=3, ygap=6,
-            customdata=[[z_row[j] for j in range(52)]],
-            hovertemplate=(
-                f"<b>{disease}</b><br>Week %{{x}}<br>Cases: <b>%{{customdata}}</b><extra></extra>"
-            ),
-        ))
-
-    # "Now" marker
+def build_state_heatmap(df, state, current_week):
+    sdf = df[df["State/UT"] == state]
+    pivot = (
+        sdf.groupby(["Disease/Illness","Week"])["No. of Cases"]
+        .sum().reset_index()
+        .pivot(index="Disease/Illness", columns="Week", values="No. of Cases")
+        .fillna(0)
+    )
+    for w in range(1, 53):
+        if w not in pivot.columns: pivot[w] = 0
+    pivot = pivot[sorted(pivot.columns)]
+ 
+    z      = pivot.values
+    z_log  = np.log1p(z)
+ 
+    fig = go.Figure(go.Heatmap(
+        z=z_log,
+        x=list(pivot.columns),
+        y=pivot.index.tolist(),
+        colorscale=[
+            [0.00,"#060e1c"],[0.15,"#0a2040"],
+            [0.40,"#0d4f8a"],[0.65,"#1a7fd4"],
+            [0.82,"#ff9800"],[0.93,"#ff5252"],
+            [1.00,"#ff1744"],
+        ],
+        hovertemplate="<b>%{y}</b><br>Week %{x}<br>Cases: %{customdata:,}<extra></extra>",
+        customdata=z,
+        showscale=True,
+        colorbar=dict(
+            title=dict(text="log", font=dict(color="#3d6a9e", size=9)),
+            tickfont=dict(color="#3d6a9e", size=9),
+            bgcolor="#071630", bordercolor="#1b3d70",
+            thickness=10, len=0.85, x=1.01,
+        ),
+        xgap=0.4, ygap=0.4,
+    ))
+ 
+    # NOW marker
     fig.add_vline(
         x=current_week,
-        line_color="#64ffda",
-        line_width=1.5,
-        line_dash="dot",
-        annotation_text="Now",
-        annotation_font_color="#64ffda",
-        annotation_font_size=10,
+        line=dict(color="#6fb3ff", width=1.5, dash="dot"),
+        annotation_text="▼ NOW",
+        annotation_font=dict(color="#6fb3ff", size=8, family="Space Mono"),
         annotation_position="top",
     )
-
-    tick_vals = sorted(MONTH_TICKS.keys())
-    tick_text = [MONTH_TICKS[v] for v in tick_vals]
-
+ 
     fig.update_layout(
-        paper_bgcolor="#0d1526",
-        plot_bgcolor="#0d1526",
-        font=dict(color="#a0aec0", family="DM Sans", size=11),
+        paper_bgcolor="#071630", plot_bgcolor="#071630",
+        font=dict(color="#3d6a9e", size=10),
+        margin=dict(l=0, r=40, t=22, b=10),
+        height=300,
         xaxis=dict(
-            tickvals=tick_vals,
-            ticktext=tick_text,
-            tickfont=dict(color="#718096", size=10),
-            showgrid=False,
-            zeroline=False,
-            range=[0.5, 52.5],
+            title=dict(text="Week of Year", font=dict(color="#3d6a9e", size=10)),
+            tickmode="linear", tick0=1, dtick=4,
+            tickfont=dict(color="#3d6a9e", size=9),
+            gridcolor="#0d2240", zeroline=False,
         ),
         yaxis=dict(
-            tickfont=dict(color="#c8d6e5", size=11),
-            showgrid=False,
-            zeroline=False,
-            autorange="reversed",
+            tickfont=dict(color="#7aa8d0", size=9),
+            gridcolor="#0d2240", zeroline=False,
         ),
-        margin=dict(l=10, r=10, t=24, b=10),
-        height=max(200, len(top_diseases) * 46 + 60),
-        hoverlabel=dict(bgcolor="#111827", font_color="#e2e8f0"),
     )
     return fig
 
 
+from plotly.subplots import make_subplots
+
+def build_disease_heatmap(disease_weekly: pd.DataFrame, state: str, current_week: int, raw_df=None) -> go.Figure:
+
+    sdf = disease_weekly[disease_weekly["State/UT"] == state].copy()
+
+    if sdf.empty and raw_df is not None:
+        sdf = (
+            raw_df[raw_df["State/UT"] == state]
+            .groupby(["Disease/Illness", "Week"])["No. of Cases"]
+            .sum()
+            .reset_index()
+            .rename(columns={"Disease/Illness": "disease", "No. of Cases": "cases"})
+        )
+
+    if sdf.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            paper_bgcolor="#071630", plot_bgcolor="#071630", height=220,
+            annotations=[dict(text="No data available", x=0.5, y=0.5,
+                              font=dict(color="#3d6a9e"), showarrow=False)]
+        )
+        return fig
+
+    # ── Top 5 diseases by total cases ─────────────────────────────────────
+    top5 = (
+        sdf.groupby("disease")["cases"]
+        .sum()
+        .nlargest(5)
+        .index.tolist()
+    )
+    sdf = sdf[sdf["disease"].isin(top5)]
+
+    # ── Build pivot (all 52 weeks guaranteed) ─────────────────────────────
+    pivot = (
+        sdf.pivot_table(index="disease", columns="Week", values="cases", aggfunc="sum")
+        .fillna(0)
+    )
+    for w in range(1, 53):
+        if w not in pivot.columns:
+            pivot[w] = 0
+    pivot = pivot[sorted(pivot.columns)]
+    pivot = pivot.loc[pivot.sum(axis=1).sort_values(ascending=False).index]
+
+    diseases = pivot.index.tolist()
+    weeks    = list(range(1, 53))   # always 1‑52
+    n        = len(diseases)
+
+    DISEASE_COLORS = {
+        "Dengue":                  ["#fff0f0", "#ffb3b3", "#ff6666", "#cc0000", "#7a0000"],
+        "Malaria":                 ["#fff0f0", "#ffb3b3", "#ff6666", "#cc0000", "#7a0000"],
+        "Typhoid":                 ["#fffaf0", "#ffdfa0", "#ffb732", "#d4810a", "#7a4600"],
+        "Leptospirosis":           ["#f0fffc", "#b3ede0", "#40c9a2", "#007f6e", "#004d42"],
+        "Cholera":                 ["#f0f8ff", "#a8d4f5", "#4a9fd4", "#1a5fa8", "#0a3060"],
+        "Acute Diarrheal Disease": ["#fff0f8", "#ffb3d9", "#ff66aa", "#cc0066", "#7a003d"],
+        "Food Poisoning":          ["#f5fff0", "#b3f0b3", "#44cc44", "#228b22", "#0a5214"],
+        "Scrub Typhus":            ["#fff8f0", "#ffd4a8", "#ffaa55", "#cc6600", "#7a3d00"],
+        "Japanese Encephalitis":   ["#f8f0ff", "#d4a8ff", "#aa55ff", "#6600cc", "#3d007a"],
+        "Measles & Rubella":       ["#fffff0", "#f0e68c", "#daa520", "#b8860b", "#6b4c00"],
+        "Chickenpox":              ["#f0f8ff", "#a8c8f0", "#5599dd", "#2255aa", "#0a2d6b"],
+        "Diphtheria":              ["#fff0f0", "#ffccaa", "#ff8844", "#cc4400", "#7a2900"],
+        "Fever Of Unknown Origin": ["#f0fff8", "#a8f0cc", "#33cc88", "#008855", "#004d33"],
+        "Only Fever <7 Days":      ["#fff8f0", "#ffe0b3", "#ffaa33", "#cc7700", "#7a4400"],
+        "Fever With Rash":         ["#fff0ff", "#f0b3f0", "#cc44cc", "#880088", "#4d004d"],
+        "Fever":                   ["#fff8f0", "#ffe0b3", "#ffaa33", "#cc7700", "#7a4400"],
+        "Animal Bite - Dog Bite":  ["#f0fff8", "#a8f0d4", "#33ccaa", "#008877", "#004d44"],
+    }
+    DEFAULT_COLORS = ["#f5f5ff", "#b3b3ee", "#6666cc", "#222299", "#0a0a5c"]
+
+    week_tickvals = list(range(1, 53, 4))
+    week_ticktext = [str(w) for w in week_tickvals]
+
+    from plotly.subplots import make_subplots
+
+    cell_px        = 14
+    row_gap_px     = 6
+    axis_margin_px = 70
+    fig_height     = n * cell_px + (n - 1) * row_gap_px + axis_margin_px
+
+    fig = make_subplots(
+        rows=n, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=row_gap_px / max(fig_height, 1),
+        row_heights=[1.0] * n,
+    )
+
+    for i, disease in enumerate(diseases):
+        row_vals  = pivot.loc[disease].reindex(range(1, 53), fill_value=0).values.astype(float)
+        row_max   = row_vals.max()
+        norm_vals = row_vals / row_max if row_max > 0 else row_vals
+
+        colors = DISEASE_COLORS.get(disease, DEFAULT_COLORS)
+        cscale = [[j / (len(colors) - 1), c] for j, c in enumerate(colors)]
+
+        fig.add_trace(
+            go.Heatmap(
+                z=[norm_vals],
+                x=weeks,
+                y=[disease],
+                colorscale=cscale,
+                zmin=0, zmax=1,
+                showscale=False,
+                text=[[int(v) for v in row_vals]],
+                hovertemplate=(
+                    "<b>" + disease + "</b><br>"
+                    "Week %{x}<br>"
+                    "Cases: %{text:,}"
+                    "<extra></extra>"
+                ),
+                xgap=2,
+                ygap=0,
+            ),
+            row=i + 1, col=1,
+        )
+
+        fig.update_yaxes(
+            tickvals=[disease],
+            ticktext=[disease],
+            tickfont=dict(color="#9ab8d4", size=8.5),
+            showgrid=False,
+            zeroline=False,
+            row=i + 1, col=1,
+        )
+        fig.update_xaxes(
+            showgrid=False,
+            zeroline=False,
+            row=i + 1, col=1,
+        )
+
+    # ── Bottom x-axis: weeks 1–52 ─────────────────────────────────────────
+    fig.update_xaxes(
+        range=[0.5, 52.5],          # ← show all 52 weeks, no clipping
+        tickmode="array",
+        tickvals=week_tickvals,
+        ticktext=week_ticktext,
+        tickfont=dict(color="#7aa8d0", size=9),
+        title=dict(text="Week", font=dict(color="#3d6a9e", size=9)),
+        row=n, col=1,
+    )
+
+    # ── Current week highlight: solid bright vertical band ────────────────
+    fig.add_vrect(
+        x0=current_week - 0.5,
+        x1=current_week + 0.5,
+        fillcolor="rgba(100, 255, 218, 0.18)",   # teal glow
+        line=dict(color="#64ffda", width=1.5),
+        layer="above",
+    )
+
+    # Label above the highlight
+    fig.add_annotation(
+        x=current_week,
+        y=1.0,
+        yref="paper",
+        text=f"▼ W{current_week}",
+        showarrow=False,
+        font=dict(color="#64ffda", size=8, family="Space Mono"),
+        xanchor="center",
+        yanchor="bottom",
+    )
+
+    fig.update_layout(
+        paper_bgcolor="#071630",
+        plot_bgcolor="#071630",
+        margin=dict(l=10, r=20, t=24, b=40),
+        height=fig_height,
+        font=dict(color="#3d6a9e", size=9),
+        hovermode="closest",
+    )
+
+    return fig
 # ─────────────────────────────────────────────
 # INSIGHT TEXT GENERATOR
 # ─────────────────────────────────────────────
