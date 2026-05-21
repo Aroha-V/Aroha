@@ -1,7 +1,7 @@
 from flask import Flask,render_template,request,jsonify,Response
 from return_context import return_context
 from google.genai import Client
-clt=Client(api_key='AIzaSyDvaWYb40ghAqHFoZMxxhTEgu7caWPHbPo')
+clt=Client(api_key='')
 app=Flask(__name__)
 @app.route('/')
 def index():
