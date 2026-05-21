@@ -1,11 +1,8 @@
-from flask import Flask,render_template,request,jsonify
+from flask import Flask,render_template,request,jsonify,Response
 from return_context import return_context
-import ollama
-with open(r'C:\Users\kumar\Desktop\KVKDEV\Aroha\KVK\rag\apikey.txt','r+') as mf:
-    apikey=mf.readline()
+from google.genai import Client
+clt=Client(api_key='AIzaSyDvaWYb40ghAqHFoZMxxhTEgu7caWPHbPo')
 app=Flask(__name__)
-user_message_arr=[]
-bot_answer_arr=[]
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -13,7 +10,6 @@ def index():
 def chatbot():
     if request.method == 'POST':
         userip = request.form.get('message')
-        user_message_arr.append(userip)
         context = return_context(userip)
         prompt=f"""You are an expert assistant.
                 Answer the question ONLY using the provided context.
@@ -31,17 +27,7 @@ def chatbot():
                 - Do NOT make assumptions or add extra information.
                 Answer:
             """
-        messages = [
-            {
-                'role': 'user',
-                'content':prompt,
-            },
-        ]
-        response=ollama.Client(host='https://ollama.com',headers={'Authorization': 'Bearer ' + apikey}).chat(
-            model='gpt-oss:120b',
-            messages=messages
-        )
+        res=clt.models.generate_content(model='gemini-2.5-flash-lite',contents=prompt)
         print(context)
-        bot_answer=response['message']['content']
-        return jsonify(str(bot_answer).strip('/n').strip('/n/n'))
+        return jsonify(res.text)
 app.run(debug=True,port=2000)

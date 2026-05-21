@@ -1,21 +1,21 @@
-from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from chromadb import PersistentClient
 import os
 import pandas as pd
-df=pd.read_csv(rf'{os.getcwd()}\Aroha\KVK\data_folder\data.csv')
+df=pd.read_excel(rf'{os.getcwd()}\Aroha\KVK\data_folder\data.xlsx')
 clt=PersistentClient(path=rf'{os.getcwd()}\Aroha\KVK\rag\db')
 documents=[]
 ids=[]
 metadatas=[]
 collection_name='AROHA_data'
-embedding_function=DefaultEmbeddingFunction()
+embedding_function=SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
 try:
     collection=clt.get_collection(name=collection_name)
 except Exception as e:
     collection=clt.create_collection(name=collection_name,embedding_function=embedding_function)
 counter=0
 dict_var = {}
-for index in range(len(df)):
+for index in range(len(df[:50])):
     dict_var[index] = df.iloc[index].to_dict()
 for i in dict_var:
     template = f'''
@@ -39,8 +39,8 @@ Action Taken To Mitigate the Incident:
         "status": dict_var[i]['status'],
         "cases": dict_var[i]['no_of_cases'],
         "deaths": dict_var[i]['deaths'],
-        "start_date": dict_var[i]['start_of_outbreak'],
-        "report_date": dict_var[i]['date_of_reporting']
+        "start_date": str(dict_var[i]['start_of_outbreak']),
+        "report_date": str(dict_var[i]['date_of_reporting'])
     })
     counter += 1
 collection.add(ids=ids,documents=documents,metadatas=metadatas)
