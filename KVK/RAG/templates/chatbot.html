@@ -918,7 +918,7 @@
         // Reset textarea
         input.value = "";
         input.style.height = "auto";
-
+ 
         setLoading(true);
         scrollToBottom();
 
@@ -928,7 +928,7 @@
 
           const response = await fetch(API_URL, {
             method: "POST",
-            body: bodyContent,
+            body: bodyContent
           });
 
           if (!response.ok) {

@@ -1,11 +1,12 @@
 from flask import Flask,render_template,request,jsonify,Response
-from return_context import return_context
+from return_content import return_context
 from google.genai import Client
-clt=Client(api_key='')
+import os
+clt=Client(api_key=os.getenv('GOOGLE_API_KEY'))
 app=Flask(__name__)
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('chatbot.html')
 @app.route('/Chatbot',methods=['POST'])
 def chatbot():
     if request.method == 'POST':
@@ -27,7 +28,7 @@ def chatbot():
                 - Do NOT make assumptions or add extra information.
                 Answer:
             """
-        res=clt.models.generate_content(model='gemini-2.5-flash-lite',contents=prompt)
+        res=clt.models.generate_content(model='gemini-3.1-flash-lite',contents=prompt)
         print(context)
-        return jsonify(res.text)
+        return res.text
 app.run(debug=True,port=2000)
