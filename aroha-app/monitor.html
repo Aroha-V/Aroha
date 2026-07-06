@@ -1,0 +1,833 @@
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap");
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: #0a0e1a;
+    color: #e2e8f0;
+    font-family: "DM Sans", sans-serif;
+  }
+  #app {
+    padding: 1.2rem 1.4rem;
+    min-height: 100vh;
+    background: #0a0e1a;
+  }
+  .main-header {
+    font-family: "Space Mono", monospace;
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    color: #64ffda;
+    text-transform: uppercase;
+    margin-bottom: 0.15rem;
+  }
+  .sub-header {
+    font-size: 0.8rem;
+    color: #718096;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.2rem;
+  }
+  .week-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .week-row label {
+    font-family: "Space Mono", monospace;
+    font-size: 0.7rem;
+    color: #718096;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  select {
+    background: #111827;
+    border: 1px solid #1e3a5f;
+    color: #e2e8f0;
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .legend span {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: "Space Mono", monospace;
+  }
+  .badge-high {
+    background: #ff4d4d22;
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d44;
+  }
+  .badge-medium {
+    background: #ff900022;
+    color: #ff9000;
+    border: 1px solid #ff900044;
+  }
+  .badge-low {
+    background: #00ff8822;
+    color: #00ff88;
+    border: 1px solid #00ff8844;
+  }
+  .badge-none {
+    background: #44444422;
+    color: #888;
+    border: 1px solid #44444444;
+  }
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .kpi-card {
+    background: linear-gradient(135deg, #111827, #1a2234);
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+  }
+  .kpi-val {
+    font-family: "Space Mono", monospace;
+    font-size: 1.4rem;
+    color: #64ffda;
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 0.67rem;
+    color: #718096;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+  }
+  hr.divider {
+    border: none;
+    border-top: 1px solid #1e3a5f;
+    margin: 1rem 0;
+  }
+  .main-grid {
+    display: grid;
+    grid-template-columns: 6fr 4fr;
+    gap: 1.5rem;
+  }
+  .panel-label {
+    font-family: "Space Mono", monospace;
+    font-size: 0.68rem;
+    color: #718096;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #mapSvg {
+    width: 100%;
+    cursor: pointer;
+  }
+  .detail-panel {
+    background: linear-gradient(135deg, #0d1526, #111827);
+    border: 1px solid #1e3a5f;
+    border-left: 3px solid #64ffda;
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin-top: 0.5rem;
+  }
+  .detail-title {
+    font-family: "Space Mono", monospace;
+    color: #64ffda;
+    font-size: 0.95rem;
+    margin-bottom: 0.7rem;
+  }
+  .state-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 0.8rem;
+  }
+  .state-metric-val {
+    font-family: "Space Mono", monospace;
+    font-size: 1.3rem;
+  }
+  .state-metric-lbl {
+    font-size: 0.68rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .insight {
+    background: #0a0e1a;
+    border-left: 2px solid #64ffda44;
+    padding: 0.5rem 0.8rem;
+    border-radius: 0 5px 5px 0;
+    font-size: 0.82rem;
+    color: #a0aec0;
+    line-height: 1.6;
+    margin-top: 0.7rem;
+  }
+  #heatmapWrap {
+    margin-top: 1rem;
+  }
+  .hm-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 3px;
+  }
+  .hm-name {
+    font-size: 0.72rem;
+    color: #9ab8d4;
+    text-align: right;
+    padding-right: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hm-bars {
+    display: flex;
+    gap: 1px;
+    height: 12px;
+  }
+  .hm-cell {
+    flex: 1;
+    border-radius: 1px;
+    transition: opacity 0.15s;
+  }
+  .hm-cell:hover {
+    opacity: 0.7;
+    cursor: pointer;
+  }
+  .hm-xaxis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.64rem;
+    color: #3d6a9e;
+    margin-left: 126px;
+    padding-top: 2px;
+  }
+  #stateTable {
+    margin-top: 1rem;
+  }
+  .tbl-wrap {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+  thead th {
+    background: #0d1526;
+    color: #718096;
+    font-size: 0.67rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.6rem;
+    text-align: left;
+    position: sticky;
+    top: 0;
+  }
+  tbody tr {
+    border-bottom: 1px solid #1e3a5f11;
+    transition: background 0.1s;
+  }
+  tbody tr:hover {
+    background: #1a2234;
+  }
+  tbody td {
+    padding: 0.35rem 0.6rem;
+    color: #e2e8f0;
+  }
+  .map-section {
+    position: relative;
+  }
+  #mapWrap {
+    position: relative;
+  }
+  #tooltip {
+    position: fixed;
+    background: #0d1526;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.75rem;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    color: #e2e8f0;
+    max-width: 200px;
+  }
+  #tooltip b {
+    color: #64ffda;
+  }
+  .legend-label {
+    font-family: "Space Mono", monospace;
+    font-size: 0.67rem;
+    color: #718096;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+</style>
+<div id="app">
+  <h2
+    class="sr-only"
+    style="position: absolute; width: 1px; height: 1px; overflow: hidden"
+  >
+    India Disease Outbreak Monitor — IDSP weekly surveillance dashboard
+  </h2>
+  <p class="main-header">🦠 India Disease Outbreak Monitor</p>
+  <p class="sub-header">IDSP Surveillance · Weekly Analysis Interface</p>
+  <div class="week-row">
+    <label>Epidemiological Week</label>
+    <select id="weekSel"></select>
+    <div class="legend">
+      <span class="legend-label">RISK</span>
+      <span class="badge-high">HIGH</span>
+      <span class="badge-medium">MEDIUM</span>
+      <span class="badge-low">LOW</span>
+      <span class="badge-none">NO CASES</span>
+    </div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-val" id="kTotalCases">—</div>
+      <div class="kpi-label">Total Cases</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" id="kHighRisk">—</div>
+      <div class="kpi-label">High Risk States</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" id="kGrowth">—</div>
+      <div class="kpi-label">Rapid Growth (&gt;20%)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" id="kTopState" style="font-size: 0.95rem">—</div>
+      <div class="kpi-label">Highest Burden State</div>
+    </div>
+  </div>
+  <hr class="divider" />
+  <div class="main-grid">
+    <div class="map-section">
+      <div class="panel-label">Choropleth · Click a state to analyse</div>
+      <div id="mapWrap"><svg id="mapSvg" viewBox="0 0 700 560"></svg></div>
+    </div>
+    <div>
+      <div class="panel-label">State Detail Panel</div>
+      <select id="stateSel" style="width: 100%; margin-bottom: 0.5rem"></select>
+      <div class="detail-panel">
+        <div class="detail-title" id="dpName">—</div>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <span id="dpBadge" class="badge-none">—</span>
+          <span style="font-size: 0.78rem; color: #718096"
+            >Top: <b style="color: #e2e8f0" id="dpDisease">—</b></span
+          >
+        </div>
+        <div class="state-grid">
+          <div>
+            <div class="state-metric-val" id="dpCases" style="color: #64ffda">
+              —
+            </div>
+            <div class="state-metric-lbl">This Week</div>
+          </div>
+          <div>
+            <div class="state-metric-val" id="dpGrowth">—</div>
+            <div class="state-metric-lbl">WoW Growth</div>
+          </div>
+        </div>
+        <div class="insight" id="dpInsight"></div>
+      </div>
+      <div id="heatmapWrap">
+        <div class="panel-label" style="margin-top: 0.9rem; margin-bottom: 4px">
+          Seasonal Pattern · Disease × Week
+        </div>
+        <div id="heatmapInner"></div>
+      </div>
+    </div>
+  </div>
+  <div id="stateTable">
+    <hr class="divider" />
+    <div class="panel-label" style="margin-bottom: 6px">
+      All States · Week Summary
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>State / UT</th>
+            <th>Cases</th>
+            <th>Prev Week</th>
+            <th>Growth %</th>
+            <th>Risk</th>
+            <th>Top Disease</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div id="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+  const STATES = [
+    "Andaman and Nicobar",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chandigarh",
+    "Chhattisgarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jammu and Kashmir",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Lakshadweep",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "NCT of Delhi",
+    "Odisha",
+    "Puducherry",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+  ];
+
+  const DISEASES = [
+    "Dengue",
+    "Malaria",
+    "Typhoid",
+    "Acute Diarrheal Disease",
+    "Leptospirosis",
+    "Cholera",
+    "Food Poisoning",
+    "Scrub Typhus",
+    "Chickenpox",
+    "Fever",
+  ];
+
+  const DISEASE_COLORS = {
+    Dengue: ["#0d0505", "#3d0a0a", "#7a1010", "#cc0000", "#ff5252", "#ffb3b3"],
+    Malaria: ["#05050d", "#0a0a3d", "#10107a", "#0000cc", "#5252ff", "#b3b3ff"],
+    Typhoid: ["#0d0900", "#3d2200", "#7a4500", "#cc7a00", "#ffaa33", "#ffdb99"],
+    "Acute Diarrheal Disease": [
+      "#00050d",
+      "#001a3d",
+      "#003b7a",
+      "#0077cc",
+      "#33aaff",
+      "#99d6ff",
+    ],
+    Leptospirosis: [
+      "#00050a",
+      "#003028",
+      "#006050",
+      "#00a080",
+      "#33d4aa",
+      "#99eecc",
+    ],
+    Cholera: ["#0a0500", "#3d1a00", "#7a3a00", "#cc6600", "#ff9933", "#ffcc99"],
+    "Food Poisoning": [
+      "#050a00",
+      "#1a3d00",
+      "#3a7a00",
+      "#66cc00",
+      "#99ff33",
+      "#ccff99",
+    ],
+    "Scrub Typhus": [
+      "#0a000a",
+      "#3d003d",
+      "#7a007a",
+      "#cc00cc",
+      "#ff33ff",
+      "#ffb3ff",
+    ],
+    Chickenpox: [
+      "#000a0a",
+      "#003d3d",
+      "#007a7a",
+      "#00cccc",
+      "#33ffff",
+      "#99ffff",
+    ],
+    Fever: ["#0a0a00", "#3d3d00", "#7a7a00", "#cccc00", "#ffff33", "#ffffaa"],
+  };
+
+  const rng = (seed) => {
+    let s = seed;
+    return () => {
+      s = Math.sin(s) * 10000;
+      return s - Math.floor(s);
+    };
+  };
+
+  function generateData() {
+    const data = {};
+    STATES.forEach((st) => {
+      data[st] = {};
+      DISEASES.forEach((dis) => {
+        const r = rng(st.charCodeAt(0) * 31 + dis.charCodeAt(0) * 17);
+        const base = Math.floor(r() * 120);
+        const seasonal = dis === "Dengue" || dis === "Malaria" ? 1 : 0.3;
+        data[st][dis] = Array.from({ length: 52 }, (_, w) => {
+          const r2 = rng(st.charCodeAt(1) * 13 + dis.charCodeAt(1) * 7 + w * 3);
+          const wave = seasonal
+            ? Math.max(0, Math.sin(((w - 20) / 52) * Math.PI * 2) * 80)
+            : 0;
+          return Math.max(0, Math.round(base * r2() + wave * r2()));
+        });
+      });
+    });
+    return data;
+  }
+
+  const DATA = generateData();
+
+  function getWeekData(week) {
+    const wIdx = week - 1;
+    return STATES.map((st) => {
+      const casesByDis = {};
+      let total = 0;
+      DISEASES.forEach((d) => {
+        const c = DATA[st][d][wIdx];
+        casesByDis[d] = c;
+        total += c;
+      });
+      const prev = DISEASES.reduce(
+        (s, d) => s + (wIdx > 0 ? DATA[st][d][wIdx - 1] : 0),
+        0,
+      );
+      const growth =
+        prev > 0 ? ((total - prev) / prev) * 100 : total > 0 ? 100 : 0;
+      const topDis = Object.entries(casesByDis).sort(
+        (a, b) => b[1] - a[1],
+      )[0][0];
+      let risk =
+        total === 0
+          ? "No Cases"
+          : total > 200 || growth > 50
+            ? "High"
+            : total > 50
+              ? "Medium"
+              : "Low";
+      return {
+        state: st,
+        cases: total,
+        prev,
+        growth: +growth.toFixed(1),
+        topDis,
+        risk,
+        byDis: casesByDis,
+      };
+    });
+  }
+
+  // Populate week selector
+  const weekSel = document.getElementById("weekSel");
+  for (let w = 1; w <= 52; w++) {
+    const o = document.createElement("option");
+    o.value = w;
+    o.text = `Week ${w}`;
+    if (w === 24) o.selected = true;
+    weekSel.appendChild(o);
+  }
+
+  const stateSel = document.getElementById("stateSel");
+  STATES.forEach((s) => {
+    const o = document.createElement("option");
+    o.value = s;
+    o.text = s;
+    stateSel.appendChild(o);
+  });
+
+  let currentWeek = 24,
+    currentState = STATES[28];
+
+  const RISK_COLOR = {
+    High: "#ff4d4d",
+    Medium: "#ff9000",
+    Low: "#00ff88",
+    "No Cases": "#1e3a5f",
+  };
+  const RISK_FILL = {
+    High: "#3d0a0a",
+    Medium: "#3d1e00",
+    Low: "#0a2610",
+    "No Cases": "#0d1526",
+  };
+
+  // SVG map (schematic India)
+  const stateCoords = {
+    "Andaman and Nicobar": [640, 400],
+    "Andhra Pradesh": [370, 360],
+    "Arunachal Pradesh": [570, 130],
+    Assam: [540, 160],
+    Bihar: [430, 220],
+    Chandigarh: [290, 155],
+    Chhattisgarh: [410, 280],
+    "Dadra and Nagar Haveli and Daman and Diu": [215, 285],
+    Goa: [245, 375],
+    Gujarat: [195, 250],
+    Haryana: [290, 185],
+    "Himachal Pradesh": [285, 140],
+    "Jammu and Kashmir": [245, 100],
+    Jharkhand: [450, 250],
+    Karnataka: [280, 380],
+    Kerala: [275, 430],
+    Lakshadweep: [190, 440],
+    "Madhya Pradesh": [340, 240],
+    Maharashtra: [270, 310],
+    Manipur: [570, 215],
+    Meghalaya: [545, 195],
+    Mizoram: [560, 245],=-
+    Nagaland: [580, 180],
+    "NCT of Delhi": [305, 185],
+    Odisha: [460, 295],
+    Puducherry: [355, 420],
+    Punjab: [265, 155],
+    Rajasthan: [240, 210],
+    Sikkim: [500, 165],
+    "Tamil Nadu": [315, 430],
+    Telangana: [350, 320],
+    Tripura: [555, 230],
+    "Uttar Pradesh": [365, 195],
+    Uttarakhand: [330, 165],
+    "West Bengal": [490, 230],
+  };
+
+  const svg = d3.select("#mapSvg");
+  const tooltip = document.getElementById("tooltip");
+
+  function buildMap(wData) {
+    svg.selectAll("*").remove();
+    svg
+      .append("text")
+      .attr("x", 350)
+      .attr("y", 530)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#1e3a5f")
+      .attr("font-size", "10")
+      .attr("font-family", "Space Mono")
+      .text("Schematic representation · Click state to analyse");
+    const byState = {};
+    wData.forEach((d) => (byState[d.state] = d));
+    STATES.forEach((st) => {
+      const coord = stateCoords[st];
+      if (!coord) return;
+      const d = byState[st] || { cases: 0, risk: "No Cases" };
+      const g = svg.append("g").attr("cursor", "pointer");
+      g.append("circle")
+        .attr("cx", coord[0])
+        .attr("cy", coord[1])
+        .attr("r", 18)
+        .attr("fill", RISK_FILL[d.risk])
+        .attr("stroke", RISK_COLOR[d.risk])
+        .attr("stroke-width", 1.5);
+      g.append("text")
+        .attr("x", coord[0])
+        .attr("y", coord[1] + 1)
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .attr("fill", RISK_COLOR[d.risk])
+        .attr("font-size", "7.5")
+        .attr("font-family", "DM Sans")
+        .text(st.substring(0, 6));
+      g.on("mousemove", (e) => {
+        const d2 = byState[st];
+        tooltip.style.display = "block";
+        tooltip.style.left = e.clientX + 12 + "px";
+        tooltip.style.top = e.clientY - 10 + "px";
+        tooltip.innerHTML = `<b>${st}</b><br>Cases: <b>${d2.cases}</b><br>Growth: <b>${d2.growth > 0 ? "+" : ""}${d2.growth}%</b><br>Risk: <b>${d2.risk}</b><br>Top: <b>${d2.topDis}</b>`;
+      })
+        .on("mouseleave", () => (tooltip.style.display = "none"))
+        .on("click", () => {
+          currentState = st;
+          stateSel.value = st;
+          updateDetail(byState[st]);
+          updateHeatmap(st);
+        });
+    });
+  }
+
+  function updateKPIs(wData) {
+    const total = wData.reduce((s, d) => s + d.cases, 0);
+    const highRisk = wData.filter((d) => d.risk === "High").length;
+    const growing = wData.filter((d) => d.growth > 20).length;
+    const topState = wData.sort((a, b) => b.cases - a.cases)[0];
+    document.getElementById("kTotalCases").textContent = total.toLocaleString();
+    document.getElementById("kHighRisk").textContent = highRisk;
+    document.getElementById("kGrowth").textContent = growing;
+    document.getElementById("kTopState").textContent = topState
+      ? topState.state
+      : "—";
+  }
+
+  function updateDetail(d) {
+    if (!d) return;
+    document.getElementById("dpName").textContent = d.state;
+    const badge = document.getElementById("dpBadge");
+    badge.textContent = d.risk;
+    badge.className =
+      {
+        High: "badge-high",
+        Medium: "badge-medium",
+        Low: "badge-low",
+        "No Cases": "badge-none",
+      }[d.risk] || "badge-none";
+    document.getElementById("dpDisease").textContent = d.topDis;
+    document.getElementById("dpCases").textContent = d.cases.toLocaleString();
+    const gEl = document.getElementById("dpGrowth");
+    gEl.textContent = (d.growth >= 0 ? "+" : "") + d.growth + "%";
+    gEl.style.color = d.growth > 0 ? "#ff4d4d" : "#00cc66";
+    const arrow = d.growth > 10 ? "📈" : d.growth < -10 ? "📉" : "➡️";
+    const direction = d.growth >= 0 ? "increase" : "decrease";
+    let insight = `${arrow} ${Math.abs(d.growth)}% week-over-week ${direction} in ${d.state}. Primary driver: <b>${d.topDis}</b> accounting for the majority of reported cases. `;
+    if (d.risk === "High")
+      insight += "⚠️ Risk level is HIGH — immediate surveillance recommended.";
+    else if (d.risk === "Medium")
+      insight += "🟠 Moderate activity — continued monitoring advised.";
+    else if (d.risk === "No Cases")
+      insight = "No reported cases this week. Situation appears stable.";
+    else insight += "🟢 Situation under control at current levels.";
+    document.getElementById("dpInsight").innerHTML = insight;
+  }
+
+  function updateHeatmap(state) {
+    const inner = document.getElementById("heatmapInner");
+    inner.innerHTML = "";
+    const stData = DATA[state];
+    const sorted = DISEASES.slice().sort((a, b) => {
+      const sa = stData[a].reduce((x, y) => x + y, 0);
+      const sb = stData[b].reduce((x, y) => x + y, 0);
+      return sb - sa;
+    });
+    sorted.forEach((dis) => {
+      const vals = stData[dis];
+      const maxV = Math.max(...vals, 1);
+      const row = document.createElement("div");
+      row.className = "hm-row";
+      const nm = document.createElement("div");
+      nm.className = "hm-name";
+      nm.title = dis;
+      nm.textContent = dis;
+      const bars = document.createElement("div");
+      bars.className = "hm-bars";
+      const colors = DISEASE_COLORS[dis] || [
+        "#050505",
+        "#1a1a1a",
+        "#333",
+        "#555",
+        "#888",
+        "#bbb",
+      ];
+      vals.forEach((v, wi) => {
+        const cell = document.createElement("div");
+        cell.className = "hm-cell";
+        const norm = v / maxV;
+        const ci = Math.min(
+          Math.floor(norm * colors.length),
+          colors.length - 1,
+        );
+        cell.style.background = colors[ci];
+        if (wi + 1 === currentWeek) {
+          cell.style.outline = "1px solid #64ffda";
+          cell.style.zIndex = "2";
+        }
+        cell.title = `${dis} W${wi + 1}: ${v} cases`;
+        bars.appendChild(cell);
+      });
+      row.appendChild(nm);
+      row.appendChild(bars);
+      inner.appendChild(row);
+    });
+    const xAxis = document.createElement("div");
+    xAxis.className = "hm-xaxis";
+    ["W1", "W14", "W27", "W40", "W52"].forEach((l) => {
+      const s = document.createElement("span");
+      s.textContent = l;
+      xAxis.appendChild(s);
+    });
+    inner.appendChild(xAxis);
+  }
+
+  function updateTable(wData) {
+    const body = document.getElementById("tblBody");
+    body.innerHTML = "";
+    const sorted = [...wData].sort((a, b) => b.cases - a.cases);
+    sorted.forEach((d) => {
+      const tr = document.createElement("tr");
+      const riskIcon =
+        { High: "🔴", Medium: "🟠", Low: "🟢", "No Cases": "⚫" }[d.risk] || "";
+      const gSign = d.growth >= 0 ? "+" : "";
+      tr.innerHTML = `<td>${d.state}</td><td>${d.cases.toLocaleString()}</td><td>${d.prev.toLocaleString()}</td><td style="color:${d.growth > 0 ? "#ff6b6b" : d.growth < 0 ? "#00cc66" : "#888"}">${gSign}${d.growth}%</td><td>${riskIcon} ${d.risk}</td><td style="color:#9ab8d4">${d.topDis}</td>`;
+      tr.style.cursor = "pointer";
+      tr.addEventListener("click", () => {
+        currentState = d.state;
+        stateSel.value = d.state;
+        updateDetail(d);
+        updateHeatmap(d.state);
+      });
+      body.appendChild(tr);
+    });
+  }
+
+  function fullUpdate() {
+    currentWeek = parseInt(weekSel.value);
+    const wData = getWeekData(currentWeek);
+    buildMap(wData);
+    updateKPIs(wData);
+    const stD = wData.find((d) => d.state === currentState) || wData[0];
+    updateDetail(stD);
+    updateHeatmap(currentState);
+    updateTable(wData);
+  }
+
+  weekSel.addEventListener("change", fullUpdate);
+  stateSel.addEventListener("change", () => {
+    currentState = stateSel.value;
+    const wData = getWeekData(currentWeek);
+    const stD = wData.find((d) => d.state === currentState);
+    if (stD) {
+      updateDetail(stD);
+      updateHeatmap(currentState);
+    }
+  });
+
+  fullUpdate();
+</script>

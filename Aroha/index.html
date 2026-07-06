@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AROHA — Disease Surveillance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.0/dist/purify.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0C0C0C;
+      --panel:      #111111;
+      --surface:    #181818;
+      --surface-2:  #202020;
+      --surface-3:  #282828;
+      --border:     rgba(255,255,255,0.07);
+      --border-hi:  rgba(255,255,255,0.13);
+      /* F1 red — only for structural accents (stripe, logo ring, IDSP badge) */
+      --red:        #E8002D;
+      --red-dim:    rgba(232,0,45,0.1);
+      --red-glow:   rgba(232,0,45,0.18);
+      /* Indigo — user messages & interactive elements */
+      --indigo:     #5B6CF9;
+      --indigo-2:   #4457F5;
+      --indigo-dim: rgba(91,108,249,0.12);
+      --indigo-glow:rgba(91,108,249,0.25);
+      /* Status / highlight */
+      --teal:       #2DD4BF;
+      --teal-dim:   rgba(45,212,191,0.1);
+      --silver:     #8A8A8A;
+      --text:       #F0F0F0;
+      --text-2:     #808080;
+      --text-3:     #404040;
+      --font:       'Inter', sans-serif;
+      --mono:       'JetBrains Mono', monospace;
+      --nav-h:      54px;
+    }
+
+    html, body, #root { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      /* subtle carbon fibre weave */
+      background-image:
+        repeating-linear-gradient(45deg,  rgba(255,255,255,.012) 0, rgba(255,255,255,.012) 1px, transparent 0, transparent 50%),
+        repeating-linear-gradient(-45deg, rgba(255,255,255,.012) 0, rgba(255,255,255,.012) 1px, transparent 0, transparent 50%);
+      background-size: 8px 8px;
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+    /* ── Markdown ── */
+    .md p           { margin-bottom: 10px; line-height: 1.75; }
+    .md p:last-child{ margin-bottom: 0; }
+    .md strong      { font-weight: 600; color: #fff; }
+    .md em          { color: var(--text-2); font-style: italic; }
+    .md ul, .md ol  { padding-left: 18px; margin-bottom: 10px; }
+    .md li          { margin-bottom: 4px; line-height: 1.65; }
+    .md li:last-child { margin-bottom: 0; }
+    .md code        { font-family: var(--mono); font-size: 12px; background: rgba(91,108,249,.12); color: #a5b4fc; padding: 2px 6px; border-radius: 4px; }
+    .md pre         { background: #0e0e0e; border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; margin-bottom: 10px; }
+    .md pre code    { background: none; color: #c7d2fe; padding: 0; }
+    .md h2, .md h3  { font-weight: 700; margin: 14px 0 6px; color: #fff; }
+    .md h2          { font-size: 15px; }
+    .md h3          { font-size: 14px; }
+    .md h2:first-child, .md h3:first-child { margin-top: 0; }
+    .md hr          { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+    .md table       { border-collapse: collapse; width: 100%; font-size: 13px; margin-bottom: 10px; }
+    .md th          { background: var(--surface-2); padding: 7px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-2); }
+    .md td          { padding: 6px 12px; border: 1px solid var(--border); }
+    .md tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes bounce  { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px);opacity:1} }
+    @keyframes redline { from{width:0} to{width:100%} }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ── tiny icon helper ─────────────────────────────────────────── */
+const Ico = ({ d, size=15, style={} }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style}>
+    <path d={d}/>
+  </svg>
+);
+const D = {
+  send:   "M2.01 21L23 12 2.01 3 2 10l15 2-15 2z",
+  trash:  "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+  export: "M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z",
+  copy:   "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z",
+  check:  "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z",
+  bot:    "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z",
+};
+
+/* ── markdown ────────────────────────────────────────────────── */
+function MD({ text }) {
+  const html = DOMPurify.sanitize(marked.parse(text, { breaks:true, gfm:true }));
+  return <div className="md" style={{fontSize:14}} dangerouslySetInnerHTML={{__html:html}}/>;
+}
+
+/* ── typing dots ─────────────────────────────────────────────── */
+function Dots() {
+  return (
+    <div style={{display:'flex',gap:5,padding:'2px 0',alignItems:'center'}}>
+      {[0,1,2].map(i=>(
+        <span key={i} style={{
+          width:6,height:6,borderRadius:'50%',
+          background:'var(--indigo)',opacity:.6,display:'inline-block',
+          animation:`bounce 1.1s ${i*.16}s infinite`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+/* ── copy btn ────────────────────────────────────────────────── */
+function CopyBtn({text}) {
+  const [ok, setOk] = useState(false);
+  const go = () => {
+    navigator.clipboard.writeText(text).then(()=>{setOk(true);setTimeout(()=>setOk(false),2000);});
+  };
+  return (
+    <button onClick={go} style={{
+      background:'none',border:'none',cursor:'pointer',
+      color:ok?'var(--yellow)':'var(--text-3)',
+      padding:'3px 7px',borderRadius:4,display:'flex',alignItems:'center',
+      gap:4,fontSize:11,fontFamily:'var(--font)',
+      transition:'color .15s',
+    }}>
+      <Ico d={ok?D.check:D.copy} size={11}/>{ok?'Copied':'Copy'}
+    </button>
+  );
+}
+
+/* ── message ─────────────────────────────────────────────────── */
+function Message({msg}) {
+  const isUser = msg.role==='user';
+  const isErr  = msg.isError;
+  return (
+    <div style={{
+      display:'flex',gap:10,
+      flexDirection:isUser?'row-reverse':'row',
+      alignItems:'flex-start',
+      animation:'fadeUp .25s cubic-bezier(.22,1,.36,1) both',
+    }}>
+      {/* avatar */}
+      {isUser ? (
+        <div style={{
+          width:30,height:30,borderRadius:6,flexShrink:0,
+          background:'var(--surface-2)',border:'1px solid var(--border-hi)',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontSize:14,
+        }}>👤</div>
+      ) : (
+        <div style={{
+          width:30,height:30,borderRadius:6,flexShrink:0,
+          background:'#fff',
+          boxShadow:'0 0 0 1.5px rgba(232,0,45,.4)',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          overflow:'hidden',
+        }}>
+          <img src="/logo.png" alt="AROHA"
+            style={{width:28,height:28,objectFit:'contain'}}
+            onError={e=>{e.currentTarget.style.display='none';e.currentTarget.nextSibling.style.display='flex';}}
+          />
+          <span style={{display:'none',color:'var(--red)'}}><Ico d={D.bot} size={14}/></span>
+        </div>
+      )}
+
+      {/* body */}
+      <div style={{
+        display:'flex',flexDirection:'column',gap:5,maxWidth:'78%',
+        alignItems:isUser?'flex-end':'flex-start',
+      }}>
+        <span style={{fontSize:10,fontWeight:700,color:'var(--text-3)',textTransform:'uppercase',letterSpacing:'.1em',paddingLeft:2}}>
+          {isUser?'You':'AROHA'}
+        </span>
+        <div style={{
+          padding:'11px 15px',
+          borderRadius:isUser?'10px 2px 10px 10px':'2px 10px 10px 10px',
+          fontSize:14,lineHeight:1.7,wordBreak:'break-word',
+          ...(isUser ? {
+            background:'linear-gradient(135deg, var(--indigo) 0%, var(--indigo-2) 100%)',
+            color:'#fff',
+            boxShadow:'0 4px 20px var(--indigo-glow)',
+          } : isErr ? {
+            background:'rgba(232,0,45,.06)',
+            border:'1px solid rgba(232,0,45,.2)',
+            color:'#ff8080',
+          } : {
+            background:'var(--surface)',
+            borderLeft:'2px solid var(--indigo)',
+            color:'var(--text)',
+          }),
+        }}>
+          {isUser ? <span>{msg.text}</span> : <MD text={msg.text}/>}
+        </div>
+        {!isUser && !isErr && (
+          <div style={{paddingLeft:2}}><CopyBtn text={msg.text}/></div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── starter chips ───────────────────────────────────────────── */
+const CHIPS = [
+  "Dengue outbreaks in Tamil Nadu",
+  "Cholera cases in Maharashtra",
+  "Malaria deaths in Odisha",
+  "Outbreaks in Delhi",
+  "Recent Kerala disease alerts",
+  "Top diseases by case count",
+];
+
+function Welcome({onChip}) {
+  const [hover, setHover] = useState(null);
+  return (
+    <div style={{
+      flex:1,display:'flex',flexDirection:'column',
+      alignItems:'center',justifyContent:'center',
+      padding:'40px 24px',animation:'fadeIn .4s ease',
+    }}>
+      {/* logo mark */}
+      <div style={{
+        width:80,height:80,borderRadius:16,marginBottom:24,
+        background:'#fff',
+        display:'flex',alignItems:'center',justifyContent:'center',
+        boxShadow:'0 0 0 2px rgba(232,0,45,.35), 0 16px 48px rgba(232,0,45,.15)',
+        position:'relative',overflow:'hidden',
+      }}>
+        <div style={{position:'absolute',bottom:0,left:0,right:0,height:3,background:'var(--red)'}}/>
+        <img src="/logo.png" alt="AROHA"
+          style={{width:64,height:64,objectFit:'contain'}}
+          onError={e=>{e.currentTarget.style.display='none';e.currentTarget.nextSibling.style.display='block';}}
+        />
+        <span style={{display:'none',fontSize:30}}>🏥</span>
+      </div>
+
+      <h1 style={{
+        fontSize:28,fontWeight:800,color:'#fff',
+        letterSpacing:'-.02em',marginBottom:6,
+      }}>AROHA</h1>
+
+      <div style={{
+        display:'flex',alignItems:'center',gap:8,marginBottom:12,
+      }}>
+        <div style={{height:1,width:40,background:'var(--red)'}}/>
+        <span style={{fontSize:11,fontWeight:600,color:'var(--red)',letterSpacing:'.12em',textTransform:'uppercase'}}>
+          India IDSP Surveillance
+        </span>
+        <div style={{height:1,width:40,background:'var(--red)'}}/>
+      </div>
+
+      <p style={{
+        fontSize:14,color:'var(--text-2)',maxWidth:380,
+        textAlign:'center',lineHeight:1.75,marginBottom:36,
+      }}>
+        Ask about disease outbreaks, case counts, death tolls, and trends across India's surveillance dataset.
+      </p>
+
+      {/* chips */}
+      <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',maxWidth:540}}>
+        {CHIPS.map((c,i)=>(
+          <button key={i} onClick={()=>onChip(c)}
+            onMouseEnter={()=>setHover(i)}
+            onMouseLeave={()=>setHover(null)}
+            style={{
+              padding:'7px 15px',borderRadius:4,fontFamily:'var(--font)',
+              fontSize:12,fontWeight:500,cursor:'pointer',
+              transition:'all .15s',letterSpacing:'.01em',
+              background: hover===i ? 'var(--indigo-dim)' : 'var(--surface)',
+              border: hover===i ? '1px solid rgba(91,108,249,.4)' : '1px solid var(--border-hi)',
+              color: hover===i ? '#fff' : 'var(--text-2)',
+            }}>
+            {c}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── navbar ──────────────────────────────────────────────────── */
+function Navbar({onClear,onExport,count}) {
+  const [hov, setHov] = useState(null);
+  const btns = [
+    {id:'exp', icon:D.export, tip:'Export',  fn:onExport},
+    {id:'clr', icon:D.trash,  tip:'Clear',   fn:onClear},
+  ];
+  return (
+    <header style={{
+      height:'var(--nav-h)',display:'flex',alignItems:'center',
+      justifyContent:'space-between',padding:'0 18px',
+      background:'rgba(12,12,12,.92)',backdropFilter:'blur(20px)',
+      borderBottom:'1px solid var(--border)',flexShrink:0,
+      position:'relative',zIndex:10,
+    }}>
+      {/* red accent line at very top */}
+      <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:'var(--red)'}}/>
+
+      {/* brand */}
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{
+          width:28,height:28,borderRadius:5,overflow:'hidden',
+          background:'#fff',
+          boxShadow:'0 0 0 1.5px rgba(232,0,45,.4)',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          flexShrink:0,
+        }}>
+          <img src="/logo.png" alt="AROHA"
+            style={{width:26,height:26,objectFit:'contain'}}
+            onError={e=>{e.currentTarget.style.display='none';e.currentTarget.nextSibling.style.display='block';}}
+          />
+          <span style={{display:'none',color:'var(--red)'}}>
+            <Ico d={D.bot} size={14}/>
+          </span>
+        </div>
+        <span style={{fontWeight:800,fontSize:14,color:'#fff',letterSpacing:'.03em'}}>AROHA</span>
+        <span style={{
+          fontSize:9,fontWeight:700,color:'var(--red)',
+          background:'var(--red-dim)',border:'1px solid rgba(232,0,45,.25)',
+          padding:'2px 6px',borderRadius:3,letterSpacing:'.1em',textTransform:'uppercase',
+        }}>IDSP</span>
+      </div>
+
+      {/* center status */}
+      <div style={{
+        position:'absolute',left:'50%',transform:'translateX(-50%)',
+        display:'flex',alignItems:'center',gap:7,
+      }}>
+        <span style={{
+          width:5,height:5,borderRadius:'50%',
+          background:'var(--teal)',
+          boxShadow:'0 0 6px var(--teal)',
+          animation:'pulse 2s infinite',display:'inline-block',
+        }}/>
+        <span style={{fontSize:11,fontWeight:500,color:'var(--text-2)',letterSpacing:'.04em'}}>
+          SURVEILLANCE ACTIVE
+        </span>
+      </div>
+
+      {/* actions */}
+      <div style={{display:'flex',gap:5}}>
+        {count > 0 && btns.map(b=>(
+          <button key={b.id} onClick={b.fn} title={b.tip}
+            onMouseEnter={()=>setHov(b.id)}
+            onMouseLeave={()=>setHov(null)}
+            style={{
+              width:30,height:30,borderRadius:5,
+              background: hov===b.id ? 'var(--surface-2)' : 'var(--surface)',
+              border: hov===b.id ? '1px solid var(--border-hi)' : '1px solid var(--border)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              cursor:'pointer',color: hov===b.id ? 'var(--text)' : 'var(--text-2)',
+              transition:'all .15s',
+            }}>
+            <Ico d={b.icon} size={13}/>
+          </button>
+        ))}
+      </div>
+    </header>
+  );
+}
+
+/* ── input bar ───────────────────────────────────────────────── */
+function InputBar({onSend, disabled}) {
+  const [text, setText] = useState('');
+  const [focus, setFocus] = useState(false);
+  const ref = useRef(null);
+  useEffect(()=>{if(!disabled) ref.current?.focus();},[disabled]);
+
+  const resize = () => {
+    const el = ref.current; if (!el) return;
+    el.style.height='auto';
+    el.style.height=Math.min(el.scrollHeight,150)+'px';
+  };
+  const submit = () => {
+    const t=text.trim(); if(!t||disabled) return;
+    onSend(t); setText('');
+    if(ref.current) ref.current.style.height='auto';
+  };
+  const onKey = e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();} };
+  const can = text.trim().length>0 && !disabled;
+
+  return (
+    <div style={{padding:'10px 18px 16px',flexShrink:0,position:'relative',zIndex:2}}>
+      <div style={{maxWidth:760,margin:'0 auto'}}>
+        <div style={{
+          background:'var(--surface)',
+          border:`1px solid ${focus?'rgba(91,108,249,.4)':'var(--border-hi)'}`,
+          boxShadow: focus?'0 0 0 3px rgba(91,108,249,.07)':'none',
+          transition:'border-color .2s,box-shadow .2s',overflow:'hidden',
+          borderRadius:8,
+        }}>
+          <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'10px 10px 10px 14px'}}>
+            <textarea ref={ref} value={text}
+              onChange={e=>{setText(e.target.value);resize();}}
+              onKeyDown={onKey}
+              onFocus={()=>setFocus(true)}
+              onBlur={()=>setFocus(false)}
+              placeholder="Ask about outbreaks, states, diseases…"
+              rows={1} disabled={disabled}
+              style={{
+                flex:1,background:'none',border:'none',outline:'none',
+                color:'var(--text)',fontFamily:'var(--font)',fontSize:14,
+                lineHeight:1.6,resize:'none',maxHeight:150,
+                padding:'2px 0',caretColor:'var(--red)',
+              }}
+            />
+            <button onClick={submit} disabled={!can} style={{
+              width:34,height:34,borderRadius:6,flexShrink:0,
+              background:can?'linear-gradient(135deg, var(--indigo), var(--indigo-2))':'var(--surface-2)',
+              border:can?'none':'1px solid var(--border)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              cursor:can?'pointer':'not-allowed',
+              color:can?'#fff':'var(--text-3)',
+              boxShadow:can?'0 4px 12px var(--indigo-glow)':'none',
+              transition:'all .15s',
+            }}>
+              <Ico d={D.send} size={14}/>
+            </button>
+          </div>
+          <div style={{
+            display:'flex',alignItems:'center',justifyContent:'space-between',
+            padding:'5px 12px 8px',borderTop:'1px solid var(--border)',
+          }}>
+            <span style={{fontSize:10,color:'var(--text-3)',fontWeight:500,letterSpacing:'.04em'}}>
+              INDIA IDSP · {new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}).toUpperCase()}
+            </span>
+            <span style={{fontSize:10,color:'var(--text-3)'}}>
+              <kbd style={{background:'var(--surface-2)',border:'1px solid var(--border-hi)',borderRadius:3,padding:'1px 5px',fontFamily:'var(--font)',fontSize:9,color:'var(--silver)'}}>↵</kbd>
+              {' '}send
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── app ─────────────────────────────────────────────────────── */
+function App() {
+  const [msgs, setMsgs]     = useState([]);
+  const [loading, setLoad]  = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(()=>{
+    setTimeout(()=>bottomRef.current?.scrollIntoView({behavior:'smooth'}),50);
+  },[msgs,loading]);
+
+  const send = async (text) => {
+    setMsgs(p=>[...p,{id:Date.now(),role:'user',text}]);
+    setLoad(true);
+    try {
+      const fd=new FormData(); fd.append('message',text);
+      const res = await fetch('/Chatbot',{method:'POST',body:fd});
+      if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      const reply = await res.json();
+      setMsgs(p=>[...p,{id:Date.now()+1,role:'bot',text:typeof reply==='string'?reply:JSON.stringify(reply)}]);
+    } catch(e) {
+      setMsgs(p=>[...p,{id:Date.now()+1,role:'bot',isError:true,text:`Server error: ${e.message}`}]);
+    } finally { setLoad(false); }
+  };
+
+  const clear  = ()=>setMsgs([]);
+  const export_ = ()=>{
+    const lines=msgs.map(m=>`${m.role==='user'?'You':'AROHA'}: ${m.text}`);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([lines.join('\n\n')],{type:'text/plain'}));
+    a.download=`AROHA_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+  };
+
+  return (
+    <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+      <Navbar onClear={clear} onExport={export_} count={msgs.length}/>
+
+      <div style={{flex:1,overflowY:'auto',position:'relative',zIndex:1}}>
+        <div style={{
+          maxWidth:760,margin:'0 auto',padding:'24px 18px 8px',
+          display:'flex',flexDirection:'column',minHeight:'100%',
+        }}>
+          {msgs.length===0
+            ? <Welcome onChip={send}/>
+            : (
+              <div style={{display:'flex',flexDirection:'column',gap:22}}>
+                {msgs.map(m=><Message key={m.id} msg={m}/>)}
+                {loading && (
+                  <div style={{display:'flex',gap:10,alignItems:'flex-start',animation:'fadeUp .25s ease'}}>
+                    <div style={{
+                      width:30,height:30,borderRadius:6,flexShrink:0,
+                      background:'#fff',
+                      boxShadow:'0 0 0 1.5px rgba(232,0,45,.4)',
+                      display:'flex',alignItems:'center',justifyContent:'center',
+                      overflow:'hidden',
+                    }}>
+                      <img src="/logo.png" alt="" style={{width:28,height:28,objectFit:'contain'}}
+                        onError={e=>{e.currentTarget.style.display='none';e.currentTarget.nextSibling.style.display='flex';}}/>
+                      <span style={{display:'none',color:'var(--red)'}}><Ico d={D.bot} size={14}/></span>
+                    </div>
+                    <div style={{
+                      background:'var(--surface)',borderLeft:'2px solid var(--indigo)',
+                      borderRadius:'2px 10px 10px 10px',padding:'13px 16px',
+                    }}>
+                      <Dots/>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          }
+          <div ref={bottomRef}/>
+        </div>
+      </div>
+
+      <InputBar onSend={send} disabled={loading}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

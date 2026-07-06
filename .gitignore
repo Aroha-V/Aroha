@@ -1,11 +1,7 @@
-# Exclude company's original backend code
-Aroha/
-
 # Exclude macOS system files
 __MACOSX/
 
 # Exclude other files
 implementation_plan.md
-
-# Only include aroha-app folder (frontend)
-!aroha-app/
+task.md
+walkthrough.md

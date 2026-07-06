@@ -1,0 +1,215 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Google Fonts ─── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── Base layer overrides ─── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background-color: #ffffff;
+    color: #1E293B;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: rgba(91, 108, 249, 0.15);
+    color: #4457F5;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+}
+
+/* ── Chat page body override (clean white background like landing page) ── */
+.chat-page-body {
+  background-color: #ffffff !important;
+}
+
+/* ── Chat interface light theme ── */
+.chat-scroll {
+  background-color: #ffffff !important;
+}
+
+.chat-message-user {
+  background: linear-gradient(135deg, #5B6CF9, #4457F5) !important;
+  color: #ffffff !important;
+}
+
+.chat-input-bar {
+  background-color: #ffffff !important;
+}
+
+.chat-input-field {
+  background-color: #f8f8f8 !important;
+  border: 1px solid #e0e0e0 !important;
+  color: #1e293b !important;
+}
+
+.chat-input-field:focus {
+  border: 1px solid #5B6CF9 !important;
+  box-shadow: 0 0 0 3px rgba(91, 108, 249, 0.07) !important;
+}
+
+html.chat-page-body,
+body.chat-page-body {
+  color: #1E293B !important;
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+/* ── Narrow scrollbar for chat scroll area ── */
+.chat-scroll::-webkit-scrollbar { width: 6px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+.chat-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ──────────────────────────────────────────────────────────────
+   MARKDOWN STYLES  (exact match to index.html .md rules)
+────────────────────────────────────────────────────────────── */
+.md p           { margin-bottom: 10px; line-height: 1.75; color: #475569; }
+.md p:last-child{ margin-bottom: 0; }
+.md strong      { font-weight: 600; color: #1e293b; }
+.md em          { color: #64748b; font-style: italic; }
+.md ul, .md ol  { padding-left: 18px; margin-bottom: 10px; }
+.md li          { margin-bottom: 4px; line-height: 1.65; }
+.md li:last-child { margin-bottom: 0; }
+.md code        { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(91,108,249,.08); color: #5B6CF9; padding: 2px 6px; border-radius: 4px; }
+.md pre         { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; margin-bottom: 10px; }
+.md pre code    { background: none; color: #475569; padding: 0; }
+.md h2, .md h3  { font-weight: 700; margin: 14px 0 6px; color: #1e293b; }
+.md h2          { font-size: 15px; }
+.md h3          { font-size: 14px; }
+.md h2:first-child, .md h3:first-child { margin-top: 0; }
+.md hr          { border: none; border-top: 1px solid #e2e8f0; margin: 12px 0; }
+.md table       { border-collapse: collapse; width: 100%; font-size: 13px; margin-bottom: 10px; }
+.md th          { background: #f8fafc; padding: 7px 12px; text-align: left; font-weight: 600; border: 1px solid #e2e8f0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+.md td          { padding: 6px 12px; border: 1px solid #e2e8f0; color: #475569; }
+.md tr:nth-child(even) td { background: #f8fafc; }
+
+/* ─── Component layer ─── */
+@layer components {
+
+  /* Gradient shimmer text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #7c8fff 0%, #00E5CC 50%, #5B6CF9 100%);
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+
+  .red-gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #ff1744 0%, #F59E0B 100%);
+  }
+
+  /* Glass morphism */
+  .glass {
+    background: rgba(22, 22, 40, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-dark {
+    background: rgba(8, 8, 16, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Noise texture overlay */
+  .noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* Animated border gradient button */
+  .btn-glow-border {
+    position: relative;
+    background: linear-gradient(135deg, #5B6CF9, #4457F5);
+    border-radius: 10px;
+  }
+
+  .btn-glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #7c8fff, #00E5CC, #5B6CF9);
+    background-size: 200% auto;
+    animation: borderFlow 3s linear infinite;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-glow-border:hover::before {
+    opacity: 1;
+  }
+}
+
+/* ─── Utility layer ─── */
+@layer utilities {
+  .animation-delay-100 { animation-delay: 0.1s; }
+  .animation-delay-200 { animation-delay: 0.2s; }
+  .animation-delay-300 { animation-delay: 0.3s; }
+  .animation-delay-400 { animation-delay: 0.4s; }
+  .animation-delay-500 { animation-delay: 0.5s; }
+  .animation-delay-600 { animation-delay: 0.6s; }
+  .animation-delay-700 { animation-delay: 0.7s; }
+  .animation-delay-800 { animation-delay: 0.8s; }
+  .animation-delay-900 { animation-delay: 0.9s; }
+  .animation-delay-1000 { animation-delay: 1s; }
+}
+
+/* ─── Custom keyframes (not in Tailwind) ─── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes borderFlow {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes orbDrift {
+  0%,100% { transform: translate(0,    0)    scale(1);    }
+  33%      { transform: translate(30px,-20px) scale(1.05); }
+  66%      { transform: translate(-20px,15px) scale(0.95); }
+}
+
+@keyframes gridMove {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(60px); }
+}
