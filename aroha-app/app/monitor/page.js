@@ -44,13 +44,13 @@ const DISPLAY_STATES = [
 
 // ─── Status badge helper ─────────────────────────────────────────────────────
 function StatusBadge({ status }) {
-  if (!status || status === '—') return <span className="text-slate-400 text-xs font-mono">—</span>;
+  if (!status || status === '—') return <span className="text-slate-400 dark:text-slate-500 text-xs font-mono">—</span>;
   const s = status.toLowerCase();
   let cls = 'text-xs font-mono font-semibold px-2 py-0.5 rounded border ';
-  if (s.includes('control')) cls += 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600';
-  else if (s.includes('surveillance')) cls += 'bg-amber-500/10 border-amber-500/30 text-amber-600';
-  else if (s.includes('active') || s.includes('outbreak')) cls += 'bg-red-500/10 border-red-500/30 text-red-600';
-  else cls += 'bg-slate-100 border-slate-300 text-slate-600';
+  if (s.includes('control')) cls += 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+  else if (s.includes('surveillance')) cls += 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400';
+  else if (s.includes('active') || s.includes('outbreak')) cls += 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400';
+  else cls += 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300';
   return <span className={cls}>{status}</span>;
 }
 
@@ -288,21 +288,21 @@ function IndiaMap({ geoFeatures, stateApiData, selectedState, onSelectState, sho
         <button
           onClick={() => zoom(1)}
           title="Zoom In"
-          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-700 text-lg font-bold hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all duration-150 shadow-md"
+          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-lg font-bold hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all duration-150 shadow-md"
         >
           +
         </button>
         <button
           onClick={() => zoom(-1)}
           title="Zoom Out"
-          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-700 text-lg font-bold hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all duration-150 shadow-md"
+          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-lg font-bold hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all duration-150 shadow-md"
         >
           −
         </button>
         <button
           onClick={resetZoom}
           title="Reset Zoom"
-          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-700 hover:text-white hover:border-slate-600 transition-all duration-150 shadow-md"
+          className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-700 hover:text-white hover:border-slate-600 transition-all duration-150 shadow-md"
         >
           ⟳
         </button>
@@ -453,6 +453,30 @@ export default function Monitor() {
   const [geoFeatures, setGeoFeatures] = useState([]);
   const [mapLoading, setMapLoading] = useState(true);
   const [showRisk, setShowRisk] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Sync dark mode with the html.dark class (set by Navbar toggler)
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem('theme');
+    const isDark = saved ? saved === 'dark' : true; // default: dark
+    setDarkMode(isDark);
+    document.documentElement.classList.toggle('dark', isDark);
+    // Watch for changes from Navbar toggle
+    const observer = new MutationObserver(() => {
+      setDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  };
 
   // API data: { [stateName]: Record[] }  — cached per state
   const [stateApiData, setStateApiData] = useState({});
@@ -519,30 +543,76 @@ export default function Monitor() {
     { label: 'Outbreak Events', value: outbreakCount },
   ];
 
+  // Charcoal palette (ChatGPT-style)
+  const bg      = darkMode ? '#212121' : '#ffffff';
+  const cardBg  = darkMode ? '#2f2f2f' : '#f8fafc';
+  const cardBg2 = darkMode ? '#3a3a3a' : '#f1f5f9';
+  const border  = darkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0';
+  const txtMain = darkMode ? '#ececec'  : '#0f172a';
+  const txtSub  = darkMode ? '#8e8ea0'  : '#475569';
+  const txtMute = darkMode ? '#6b7280'  : '#94a3b8';
+  const inputBg = darkMode ? '#2f2f2f'  : '#f9fafb';
+
   return (
-    <main className="min-h-screen bg-white pt-20">
+    <main className="min-h-screen pt-20 transition-colors duration-300" style={{ background: bg }}>
       <div className="max-w-[1280px] mx-auto px-6 py-8">
 
         {/* ─── Header ─── */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
-            🦠 India Disease Outbreak Monitor
-          </h1>
-          <p className="text-slate-500 font-mono text-sm tracking-widest uppercase">
-            IDSP Surveillance · Live API Data Interface
-          </p>
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight mb-2" style={{ color: txtMain }}>
+              🧫 India Disease Outbreak Monitor
+            </h1>
+            <p className="font-mono text-sm tracking-widest uppercase" style={{ color: txtMute }}>
+              IDSP Surveillance · Live API Data Interface
+            </p>
+          </div>
+
+          {/* ── Theme Toggle ── */}
+          {mounted && (
+            <button
+              id="monitor-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="relative w-10 h-10 flex items-center justify-center rounded-xl flex-shrink-0 transition-all duration-200 overflow-hidden shadow-sm"
+              style={{
+                background: darkMode ? '#2f2f2f' : '#f9fafb',
+                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                color: darkMode ? '#fbbf24' : '#64748b',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = darkMode ? '#3a3a3a' : '#f1f5f9'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = darkMode ? '#2f2f2f' : '#f9fafb'; }}
+            >
+              {/* Sun — shown in dark mode */}
+              <span style={{ position: 'absolute', transition: 'transform 0.3s ease, opacity 0.3s ease', transform: darkMode ? 'rotate(0deg) scale(1)' : 'rotate(90deg) scale(0.5)', opacity: darkMode ? 1 : 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              </span>
+              {/* Moon — shown in light mode */}
+              <span style={{ position: 'absolute', transition: 'transform 0.3s ease, opacity 0.3s ease', transform: darkMode ? 'rotate(-90deg) scale(0.5)' : 'rotate(0deg) scale(1)', opacity: darkMode ? 0 : 1 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                </svg>
+              </span>
+            </button>
+          )}
         </div>
 
         {/* ─── Controls ─── */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center mb-8 flex-wrap">
           <div className="flex items-center gap-3">
-            <label className="font-mono text-xs font-semibold text-slate-600 uppercase tracking-widest whitespace-nowrap">
-              State / UT
-            </label>
+            <label className="font-mono text-xs font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: txtSub }}>State / UT</label>
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
+              className="px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
+              style={{ background: inputBg, border: `1px solid ${border}`, color: txtMain }}
             >
               {DISPLAY_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -551,21 +621,22 @@ export default function Monitor() {
           {/* Risk / Colour toggle */}
           <button
             onClick={() => setShowRisk((v) => !v)}
-            className={`px-4 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${showRisk
-              ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25'
-              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
+            className="px-4 py-2 rounded-lg text-xs font-mono font-semibold transition-all"
+            style={{
+              background: showRisk ? '#2563eb' : inputBg,
+              border: `1px solid ${showRisk ? '#3b82f6' : border}`,
+              color: showRisk ? '#ffffff' : txtSub,
+              boxShadow: showRisk ? '0 4px 12px rgba(37,99,235,0.25)' : 'none',
+            }}
           >
             {showRisk ? '🔴 Risk Choropleth ON' : '🎨 Risk Choropleth OFF'}
           </button>
 
           {/* Legend */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-xs font-semibold text-slate-600 uppercase tracking-widest">RISK</span>
+            <span className="font-mono text-xs font-semibold uppercase tracking-widest" style={{ color: txtSub }}>RISK</span>
             {['HIGH', 'MEDIUM', 'LOW', 'NONE'].map((level) => (
-              <span key={level} className={`text-xs font-mono font-semibold px-2.5 py-1 rounded border ${RISK_COLORS[level].badge}`}>
-                {level}
-              </span>
+              <span key={level} className={`text-xs font-mono font-semibold px-2.5 py-1 rounded border ${RISK_COLORS[level].badge}`}>{level}</span>
             ))}
           </div>
         </div>
@@ -573,17 +644,15 @@ export default function Monitor() {
         {/* ─── KPI Cards ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {kpis.map((kpi) => (
-            <div
-              key={kpi.label}
-              className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="font-mono text-2xl font-black text-blue-600 mb-1">{kpi.value}</div>
-              <div className="text-xs font-mono text-slate-600 uppercase tracking-widest font-semibold">{kpi.label}</div>
+            <div key={kpi.label} className="rounded-xl p-4 transition-all duration-200"
+              style={{ background: cardBg, border: `1px solid ${border}` }}>
+              <div className="font-mono text-2xl font-black text-blue-500 mb-1">{kpi.value}</div>
+              <div className="text-xs font-mono uppercase tracking-widest font-semibold" style={{ color: txtSub }}>{kpi.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
+        <div className="h-px mb-8" style={{ background: `linear-gradient(90deg, transparent, ${border} 50%, transparent)` }} />
 
         {/* ─── Main Content Grid ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -591,28 +660,20 @@ export default function Monitor() {
           {/* ─── Map Section ─── */}
           <div className="lg:col-span-2">
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-mono text-xs font-semibold text-slate-600 uppercase tracking-widest">
-                India Choropleth · Click a state to analyse
-              </p>
-              {mapLoading && (
-                <span className="text-xs font-mono text-blue-500 animate-pulse">Loading map…</span>
-              )}
+              <p className="font-mono text-xs font-semibold uppercase tracking-widest" style={{ color: txtSub }}>India Choropleth · Click a state to analyse</p>
+              {mapLoading && (<span className="text-xs font-mono text-blue-500 animate-pulse">Loading map…</span>)}
             </div>
-
-            <div
-              className="border border-slate-200 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-sky-100"
-              style={{ height: 580 }}
-            >
+            <div className="rounded-xl overflow-hidden" style={{ height: 580, border: `1px solid ${border}`, background: cardBg }}>
               {mapLoading ? (
                 <div className="flex items-center justify-center w-full h-full">
                   <div className="text-center">
                     <div className="text-5xl mb-3 animate-bounce">🗺️</div>
-                    <p className="text-slate-500 font-mono text-sm">Loading India GeoJSON map…</p>
+                    <p className="font-mono text-sm" style={{ color: txtSub }}>Loading India GeoJSON map…</p>
                   </div>
                 </div>
               ) : geoFeatures.length === 0 ? (
                 <div className="flex items-center justify-center w-full h-full">
-                  <p className="text-slate-400 font-mono text-sm">Failed to load map. Check your connection.</p>
+                  <p className="font-mono text-sm" style={{ color: txtMute }}>Failed to load map. Check your connection.</p>
                 </div>
               ) : (
                 <IndiaMap
@@ -629,22 +690,15 @@ export default function Monitor() {
             <div className="flex items-center gap-6 mt-3 flex-wrap">
               {showRisk ? (
                 <>
-                  {[
-                    { label: '≥ 500 total cases', fill: '#ef4444' },
-                    { label: '100–499 cases', fill: '#f59e0b' },
-                    { label: '1–99 cases', fill: '#10b981' },
-                    { label: 'No data loaded', fill: '#94a3b8' },
-                  ].map(({ label, fill }) => (
+                  {[{ label: '≥ 500 total cases', fill: '#ef4444' }, { label: '100–499 cases', fill: '#f59e0b' }, { label: '1–99 cases', fill: '#10b981' }, { label: 'No data loaded', fill: '#94a3b8' }].map(({ label, fill }) => (
                     <div key={label} className="flex items-center gap-1.5">
                       <span className="inline-block w-3 h-3 rounded-sm" style={{ background: fill }} />
-                      <span className="text-xs font-mono text-slate-500">{label}</span>
+                      <span className="text-xs font-mono" style={{ color: txtSub }}>{label}</span>
                     </div>
                   ))}
                 </>
               ) : (
-                <p className="text-xs font-mono text-slate-400">
-                  🎨 Distinct colours per state — toggle Risk Choropleth to see outbreak severity
-                </p>
+                <p className="text-xs font-mono" style={{ color: txtMute }}>🎨 Distinct colours per state — toggle Risk Choropleth to see outbreak severity</p>
               )}
             </div>
           </div>
@@ -652,56 +706,56 @@ export default function Monitor() {
           {/* ─── State Detail Panel ─── */}
           <div>
             <div className="mb-3">
-              <p className="font-mono text-xs font-semibold text-slate-600 uppercase tracking-widest">
-                State Detail Panel
-              </p>
+              <p className="font-mono text-xs font-semibold uppercase tracking-widest" style={{ color: txtSub }}>State Detail Panel</p>
             </div>
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer mb-3"
+              className="w-full px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer mb-3"
+              style={{ background: inputBg, border: `1px solid ${border}`, color: txtMain }}
             >
               {DISPLAY_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
 
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-5">
-              <h3 className="font-mono font-black text-lg mb-3 text-blue-600">{selectedState}</h3>
+            <div className="rounded-xl p-5" style={{ background: cardBg, border: `1px solid ${border}` }}>
+              <h3 className="font-mono font-black text-lg mb-3 text-blue-400">{selectedState}</h3>
 
               {loadingRecords ? (
                 <div className="flex items-center gap-2 py-4">
                   <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-slate-500 font-mono text-xs">Fetching API data…</span>
+                  <span className="font-mono text-xs" style={{ color: txtSub }}>Fetching API data…</span>
                 </div>
               ) : apiError ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-red-600 font-mono text-xs">{apiError}</p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                  <p className="text-red-400 font-mono text-xs">{apiError}</p>
                 </div>
               ) : selectedRecords.length === 0 ? (
-                <p className="text-slate-400 font-mono text-xs">No outbreak records found for this state.</p>
+                <p className="font-mono text-xs" style={{ color: txtMute }}>No outbreak records found for this state.</p>
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div>
-                      <div className="font-mono text-3xl font-black text-blue-600">{totalCases.toLocaleString()}</div>
-                      <div className="text-xs font-mono text-slate-600 uppercase tracking-widest font-semibold mt-1">Total Cases</div>
+                      <div className="font-mono text-3xl font-black text-blue-400">{totalCases.toLocaleString()}</div>
+                      <div className="text-xs font-mono uppercase tracking-widest font-semibold mt-1" style={{ color: txtSub }}>Total Cases</div>
                     </div>
                     <div>
-                      <div className="font-mono text-3xl font-black text-slate-700">{outbreakCount}</div>
-                      <div className="text-xs font-mono text-slate-600 uppercase tracking-widest font-semibold mt-1">Outbreaks</div>
+                      <div className="font-mono text-3xl font-black" style={{ color: txtMain }}>{outbreakCount}</div>
+                      <div className="text-xs font-mono uppercase tracking-widest font-semibold mt-1" style={{ color: txtSub }}>Outbreaks</div>
                     </div>
                   </div>
                   <div className="mb-3">
-                    <p className="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2 font-semibold">Diseases Reported</p>
+                    <p className="text-xs font-mono uppercase tracking-wider mb-2 font-semibold" style={{ color: txtSub }}>Diseases Reported</p>
                     <div className="flex flex-wrap gap-1.5">
                       {[...new Set(selectedRecords.map((r) => r.disease))].map((d) => (
-                        <span key={d} className="text-xs font-mono px-2 py-0.5 bg-blue-100 border border-blue-200 text-blue-700 rounded">
+                        <span key={d} className="text-xs font-mono px-2 py-0.5 rounded"
+                          style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
                           {d}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <div className="bg-slate-900 rounded-lg border border-slate-700 p-3">
-                    <p className="text-xs text-slate-300 font-mono leading-relaxed">
+                  <div className="rounded-lg border p-3" style={{ background: '#171717', border: `1px solid ${border}` }}>
+                    <p className="text-xs font-mono leading-relaxed" style={{ color: txtSub }}>
                       📊 {outbreakCount} outbreak event{outbreakCount !== 1 ? 's' : ''} recorded. {uniqueDiseases} unique disease{uniqueDiseases !== 1 ? 's' : ''} tracked across {[...new Set(selectedRecords.map((r) => r.district))].length} district{selectedRecords.length !== 1 ? 's' : ''}.
                     </p>
                   </div>
@@ -713,83 +767,70 @@ export default function Monitor() {
 
         {/* ─── Data Table ─── */}
         <div>
-          <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-6" />
+          <div className="h-px mb-6" style={{ background: `linear-gradient(90deg, transparent, ${border} 50%, transparent)` }} />
           <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
-            <p className="font-mono text-xs font-semibold text-slate-600 uppercase tracking-widest">
-              {selectedState} · Outbreak Records
-            </p>
+            <p className="font-mono text-xs font-semibold uppercase tracking-widest" style={{ color: txtSub }}>{selectedState} · Outbreak Records</p>
             {loadingRecords && (
               <span className="flex items-center gap-1.5 text-xs font-mono text-blue-500">
-                <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin inline-block" />
-                Loading…
+                <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin inline-block" />Loading…
               </span>
             )}
             {!loadingRecords && selectedRecords.length > 0 && (
-              <span className="text-xs font-mono text-slate-400">
-                {selectedRecords.length} record{selectedRecords.length !== 1 ? 's' : ''} from API
-              </span>
+              <span className="text-xs font-mono" style={{ color: txtMute }}>{selectedRecords.length} record{selectedRecords.length !== 1 ? 's' : ''} from API</span>
             )}
           </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-xl">
+          <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${border}` }}>
             <table className="w-full text-sm">
-              <thead className="bg-slate-100 border-b border-slate-200">
+              <thead style={{ background: cardBg2, borderBottom: `1px solid ${border}` }}>
                 <tr>
-                  <th className="text-left px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">State</th>
-                  <th className="text-left px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">District</th>
-                  <th className="text-left px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">Disease</th>
-                  <th className="text-right px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">No. of Cases</th>
-                  <th className="text-right px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">No. of Deaths</th>
-                  <th className="text-center px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">Status</th>
-                  <th className="text-left px-4 py-3 font-mono font-semibold text-slate-700 text-xs uppercase tracking-widest">Action</th>
+                  {['State','District','Disease','No. of Cases','No. of Deaths','Status','Action'].map((h, i) => (
+                    <th key={h} className={`${i >= 3 && i <= 4 ? 'text-right' : i === 5 ? 'text-center' : 'text-left'} px-4 py-3 font-mono font-semibold text-xs uppercase tracking-widest`}
+                      style={{ color: txtSub }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {loadingRecords ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-slate-400 font-mono text-sm">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                        Fetching live data from API…
-                      </div>
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} className="text-center py-12 font-mono text-sm" style={{ color: txtSub }}>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      Fetching live data from API…
+                    </div>
+                  </td></tr>
                 ) : apiError ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-red-500 font-mono text-sm">{apiError}</td>
-                  </tr>
+                  <tr><td colSpan={7} className="text-center py-12 text-red-400 font-mono text-sm">{apiError}</td></tr>
                 ) : selectedRecords.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-slate-400 font-mono text-sm">
-                      No outbreak records found for <strong>{selectedState}</strong>.
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} className="text-center py-12 font-mono text-sm" style={{ color: txtMute }}>
+                    No outbreak records found for <strong style={{ color: txtMain }}>{selectedState}</strong>.
+                  </td></tr>
                 ) : (
                   selectedRecords.map((rec, i) => (
-                    <tr
-                      key={i}
-                      className={`border-b border-slate-100 hover:bg-blue-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}
+                    <tr key={i} className="transition-colors"
+                      style={{
+                        borderBottom: `1px solid ${border}`,
+                        background: i % 2 === 0 ? bg : cardBg,
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(59,130,246,0.05)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = i % 2 === 0 ? bg : cardBg; }}
                     >
-                      <td className="px-4 py-3 font-medium text-slate-900 capitalize whitespace-nowrap">{rec.state}</td>
-                      <td className="px-4 py-3 text-slate-700 font-mono text-xs whitespace-nowrap">{rec.district}</td>
+                      <td className="px-4 py-3 font-medium capitalize whitespace-nowrap" style={{ color: txtMain }}>{rec.state}</td>
+                      <td className="px-4 py-3 font-mono text-xs whitespace-nowrap" style={{ color: txtSub }}>{rec.district}</td>
                       <td className="px-4 py-3">
-                        <span className="inline-block text-xs font-mono font-semibold px-2 py-0.5 bg-indigo-100 border border-indigo-200 text-indigo-700 rounded whitespace-nowrap">
+                        <span className="inline-block text-xs font-mono font-semibold px-2 py-0.5 rounded whitespace-nowrap"
+                          style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
                           {rec.disease}
                         </span>
                       </td>
-                      <td className="text-right px-4 py-3 font-mono font-semibold text-slate-900">
+                      <td className="text-right px-4 py-3 font-mono font-semibold" style={{ color: txtMain }}>
                         {rec.no_of_cases != null ? rec.no_of_cases.toLocaleString() : '—'}
                       </td>
-                      <td className="text-right px-4 py-3 font-mono font-semibold text-slate-700">
+                      <td className="text-right px-4 py-3 font-mono font-semibold" style={{ color: txtSub }}>
                         {rec.no_deaths != null ? rec.no_deaths.toLocaleString() : '—'}
                       </td>
-                      <td className="text-center px-4 py-3">
-                        <StatusBadge status={rec.status} />
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 text-xs leading-relaxed max-w-xs">
-                        <span title={rec.action}>
-                          {rec.action.length > 180 ? rec.action.slice(0, 180) + '…' : rec.action}
-                        </span>
+                      <td className="text-center px-4 py-3"><StatusBadge status={rec.status} /></td>
+                      <td className="px-4 py-3 text-xs leading-relaxed max-w-xs" style={{ color: txtMute }}>
+                        <span title={rec.action}>{rec.action.length > 180 ? rec.action.slice(0, 180) + '…' : rec.action}</span>
                       </td>
                     </tr>
                   ))

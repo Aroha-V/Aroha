@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense, createContext, useContext } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signInWithGoogle } from '@/lib/firebase';
+
+// ── Theme context (avoids prop-drilling darkMode to every sub-component) ──
+const ThemeCtx = createContext(false);
 
 // ── Lightweight markdown → HTML ──────────────────────────────────
 function parseMarkdown(raw) {
@@ -129,8 +132,10 @@ function CopyBtn({ text }) {
 
 // ── Message bubble ───────────────────────────────────────────────
 function Message({ msg }) {
+  const darkMode = useContext(ThemeCtx);
   const isUser = msg.role === 'user';
   const isErr  = msg.isError;
+  const botTextColor = darkMode ? '#ececec' : '#1F2937';
   return (
     <div className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
       style={{ animation: 'chatFadeUp .25s cubic-bezier(.22,1,.36,1) both' }}>
@@ -141,8 +146,8 @@ function Message({ msg }) {
           ...(isUser
             ? { background: 'linear-gradient(135deg,#5B6CF9,#4457F5)', color: '#fff', boxShadow: '0 2px 12px rgba(68,87,245,0.18)' }
             : isErr
-            ? { background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', color: '#DC2626', padding: '11px 15px', borderRadius: '10px' }
-            : { background: 'transparent', color: '#1F2937' }),
+            ? { background: darkMode ? 'rgba(220,38,38,.08)' : 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', color: '#DC2626', padding: '11px 15px', borderRadius: '10px' }
+            : { background: 'transparent', color: botTextColor }),
         }}>
         {isUser ? <span>{msg.text}</span> : <MD text={msg.text} />}
         {!isUser && !isErr && <div className="pt-1"><CopyBtn text={msg.text} /></div>}
@@ -162,17 +167,23 @@ const CHIPS = [
 ];
 
 function Welcome({ onChip }) {
+  const darkMode = useContext(ThemeCtx);
   const [hover, setHover] = useState(null);
+  const textMuted  = darkMode ? '#8e8ea0' : '#6B7280';
+  const chipBg     = darkMode ? '#2f2f2f' : '#F9FAFB';
+  const chipBdr    = darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
+  const chipColor  = darkMode ? '#8e8ea0' : '#6B7280';
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-10"
       style={{ animation: 'chatFadeIn .4s ease' }}>
-      <h1 className="text-[28px] font-extrabold text-[#111827] mb-[6px]" style={{ letterSpacing:'-.02em' }}>Aroha</h1>
+      <h1 className="text-[28px] font-extrabold mb-[6px]"
+        style={{ letterSpacing:'-.02em', color: darkMode ? '#f1f5f9' : '#111827' }}>Aroha</h1>
       <div className="flex items-center gap-2 mb-3">
         <div className="h-px w-10" style={{ background:'#E8002D' }} />
         <span className="text-[11px] font-semibold uppercase" style={{ color:'#E8002D', letterSpacing:'.12em' }}>India Idsp surveillance</span>
         <div className="h-px w-10" style={{ background:'#E8002D' }} />
       </div>
-      <p className="text-[14px] text-center leading-[1.75] mb-9 max-w-[380px]" style={{ color:'#6B7280' }}>
+      <p className="text-[14px] text-center leading-[1.75] mb-9 max-w-[380px]" style={{ color: textMuted }}>
         Ask about disease outbreaks, case counts, death tolls, and trends across India's surveillance dataset.
       </p>
       <div className="flex flex-wrap gap-2 justify-center max-w-[540px]">
@@ -182,9 +193,9 @@ function Welcome({ onChip }) {
             className="text-[12px] font-medium rounded-[6px] cursor-pointer transition-all duration-150"
             style={{
               padding: '7px 15px', letterSpacing: '.01em',
-              background: hover===i ? 'rgba(68,87,245,0.06)' : '#F9FAFB',
-              border: hover===i ? '1px solid rgba(68,87,245,.35)' : '1px solid #E5E7EB',
-              color: hover===i ? '#4457F5' : '#6B7280',
+              background: hover===i ? 'rgba(68,87,245,0.10)' : chipBg,
+              border: hover===i ? '1px solid rgba(68,87,245,.45)' : `1px solid ${chipBdr}`,
+              color: hover===i ? '#5B6CF9' : chipColor,
             }}>
             {c}
           </button>
@@ -196,6 +207,7 @@ function Welcome({ onChip }) {
 
 // ── Input bar ────────────────────────────────────────────────────
 function InputBar({ onSend, disabled }) {
+  const darkMode = useContext(ThemeCtx);
   const [text, setText] = useState('');
   const [focus, setFocus] = useState(false);
   const ref = useRef(null);
@@ -215,13 +227,24 @@ function InputBar({ onSend, disabled }) {
 
   const today = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }).toUpperCase();
 
+  const wrapBg   = darkMode ? '#171717' : '#FFFFFF';
+  const wrapBdr  = darkMode ? 'rgba(255,255,255,0.08)' : '#F3F4F6';
+  const boxBg    = darkMode ? '#2f2f2f' : '#FFFFFF';
+  const kbdBg    = darkMode ? '#3a3a3a' : '#F9FAFB';
+  const kbdBdr   = darkMode ? 'rgba(255,255,255,0.1)' : '#E5E7EB';
+  const muteClr  = darkMode ? '#6b7280' : '#9CA3AF';
+  const inactive = darkMode ? '#3a3a3a' : '#F3F4F6';
+  const inactCl  = darkMode ? '#6b7280' : '#D1D5DB';
+  const textClr  = darkMode ? '#ececec' : '#111827';
+  const phClr    = darkMode ? '#555555' : '#D1D5DB';
+
   return (
-    <div className="flex-shrink-0 relative z-[2]" style={{ padding:'10px 18px 16px', background: '#FFFFFF', borderTop: '1px solid #F3F4F6' }}>
+    <div className="flex-shrink-0 relative z-[2]" style={{ padding:'10px 18px 16px', background: wrapBg, borderTop: `1px solid ${wrapBdr}` }}>
       <div style={{ maxWidth:760, margin:'0 auto' }}>
         <div style={{
-          background:'#FFFFFF',
-          border:`1px solid ${focus?'rgba(68,87,245,.45)':'#E5E7EB'}`,
-          boxShadow: focus?'0 0 0 3px rgba(68,87,245,.07)':'0 1px 3px rgba(0,0,0,0.04)',
+          background: boxBg,
+          border:`1px solid ${focus ? 'rgba(68,87,245,.45)' : darkMode ? '#1e2030' : '#E5E7EB'}`,
+          boxShadow: focus ? '0 0 0 3px rgba(68,87,245,.07)' : darkMode ? '0 1px 3px rgba(0,0,0,0.25)' : '0 1px 3px rgba(0,0,0,0.04)',
           transition:'border-color .2s,box-shadow .2s',
           overflow:'hidden', borderRadius:10,
         }}>
@@ -231,24 +254,24 @@ function InputBar({ onSend, disabled }) {
               onChange={(e) => { setText(e.target.value); resize(); }}
               onKeyDown={(e) => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();} }}
               onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
-              className="flex-1 bg-transparent border-none outline-none resize-none text-[14px] leading-[1.6] text-[#111827] placeholder-[#D1D5DB] font-sans"
-              style={{ maxHeight:150, padding:'2px 0', caretColor:'#4457F5' }} />
+              className="flex-1 bg-transparent border-none outline-none resize-none text-[14px] leading-[1.6] font-sans"
+              style={{ maxHeight:150, padding:'2px 0', caretColor:'#4457F5', color: textClr }} />
             <button onClick={submit} disabled={!text.trim()||disabled}
               className="flex-shrink-0 w-[34px] h-[34px] rounded-[6px] flex items-center justify-center transition-all duration-150"
               style={{
-                background: (text.trim()&&!disabled)?'linear-gradient(135deg,#5B6CF9,#4457F5)':'#F3F4F6',
+                background: (text.trim()&&!disabled) ? 'linear-gradient(135deg,#5B6CF9,#4457F5)' : inactive,
                 border: 'none',
-                cursor: (text.trim()&&!disabled)?'pointer':'not-allowed',
-                color: (text.trim()&&!disabled)?'#fff':'#D1D5DB',
-                boxShadow: (text.trim()&&!disabled)?'0 2px 8px rgba(68,87,245,0.22)':'none',
+                cursor: (text.trim()&&!disabled) ? 'pointer' : 'not-allowed',
+                color: (text.trim()&&!disabled) ? '#fff' : inactCl,
+                boxShadow: (text.trim()&&!disabled) ? '0 2px 8px rgba(68,87,245,0.22)' : 'none',
               }}>
               <Ico d={D.send} size={14} />
             </button>
           </div>
-          <div className="flex items-center justify-between" style={{ padding:'5px 12px 8px', borderTop:'1px solid #F3F4F6' }}>
-            <span className="text-[10px] font-medium" style={{ color:'#9CA3AF', letterSpacing:'.04em' }}>India Idsp · {today}</span>
-            <span className="text-[10px]" style={{ color:'#9CA3AF' }}>
-              <kbd style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:3, padding:'1px 5px', fontSize:9, color:'#9CA3AF', fontFamily:'inherit' }}>↵</kbd>
+          <div className="flex items-center justify-between" style={{ padding:'5px 12px 8px', borderTop:`1px solid ${wrapBdr}` }}>
+            <span className="text-[10px] font-medium" style={{ color: muteClr, letterSpacing:'.04em' }}>India Idsp · {today}</span>
+            <span className="text-[10px]" style={{ color: muteClr }}>
+              <kbd style={{ background: kbdBg, border:`1px solid ${kbdBdr}`, borderRadius:3, padding:'1px 5px', fontSize:9, color: muteClr, fontFamily:'inherit' }}>↵</kbd>
               {' '}send
             </span>
           </div>
@@ -446,8 +469,18 @@ function AuthModal({ defaultTab = 'login', onClose, onAuth }) {
 
 // ── Sidebar ───────────────────────────────────────────────────────
 function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectConv, onDeleteConv, onShowAuth, onLogout, onToggleSidebar }) {
+  const darkMode = useContext(ThemeCtx);
   const [hovConv, setHovConv] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const sbBg    = darkMode ? '#171717' : '#FAFAFA';
+  const sbBdr   = darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
+  const txtMain = darkMode ? '#ececec' : '#111827';
+  const txtMute = darkMode ? '#6b7280' : '#9CA3AF';
+  const txtSub  = darkMode ? '#acacac' : '#374151';
+  const hoverBg = darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
+  const menuBg  = darkMode ? '#2f2f2f' : '#FFFFFF';
+  const menuItemHov = darkMode ? '#3a3a3a' : '#F3F4F6';
 
   const grouped = (() => {
     const today = new Date(); today.setHours(0,0,0,0);
@@ -473,19 +506,19 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
         className="flex-shrink-0 flex flex-col z-30 transition-all duration-300 overflow-hidden"
         style={{
           width: open ? 260 : 0,
-          background: '#FAFAFA',
-          borderRight: open ? '1px solid #E5E7EB' : 'none',
+          background: sbBg,
+          borderRight: open ? `1px solid ${sbBdr}` : 'none',
           minWidth: open ? 260 : 0,
         }}>
         {open && (
           <div className="flex flex-col h-full overflow-hidden" style={{ minWidth:260 }}>
             {/* Sidebar header */}
-            <div className="flex-shrink-0 px-3 pt-4 pb-3" style={{ borderBottom:'1px solid #E5E7EB' }}>
+            <div className="flex-shrink-0 px-3 pt-4 pb-3" style={{ borderBottom:`1px solid ${sbBdr}` }}>
               <div className="flex items-center gap-2 px-2 mb-3">
                 <div className="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center">
                   <ArohaLogo size={20} />
                 </div>
-                <span className="font-bold text-[#111827] text-[13px]" style={{ letterSpacing:'.03em' }}>Aroha</span>
+                <span className="font-bold text-[13px]" style={{ letterSpacing:'.03em', color: txtMain }}>Aroha</span>
                 <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ color:'#E8002D', background:'rgba(232,0,45,.07)', border:'1px solid rgba(232,0,45,.18)', letterSpacing:'.08em' }}>Idsp</span>
               </div>
 
@@ -504,12 +537,12 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
             <div className="flex-1 overflow-y-auto py-2 chat-scroll">
               {!user ? (
                 <div className="px-4 py-6 flex flex-col items-center text-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background:'rgba(68,87,245,0.07)', border:'1px solid rgba(68,87,245,0.15)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background:'rgba(68,87,245,0.07)', border:'1px solid rgba(68,87,245,0.15)', color: darkMode ? '#818cf8' : '#6366f1' }}>
                     <Ico d={D.chat} size={22} />
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold text-[#111827] mb-1">Save your chat history</p>
-                    <p className="text-[12px] leading-[1.6]" style={{ color:'#6B7280' }}>
+                    <p className="text-[13px] font-semibold mb-1" style={{ color: txtMain }}>Save your chat history</p>
+                    <p className="text-[12px] leading-[1.6]" style={{ color: txtMute }}>
                       Sign in to save conversations, access history, and sync across devices.
                     </p>
                   </div>
@@ -519,25 +552,25 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
                     Sign in
                   </button>
                   <button onClick={() => onShowAuth('signup')}
-                    className="w-full py-2 rounded-lg text-[13px] font-medium transition-all text-[#374151]"
-                    style={{ background:'transparent', border:'1px solid #E5E7EB' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor='#D1D5DB'; e.currentTarget.style.background='#F9FAFB'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor='#E5E7EB'; e.currentTarget.style.background='transparent'; }}>
+                    className="w-full py-2 rounded-lg text-[13px] font-medium transition-all"
+                    style={{ background:'transparent', border:`1px solid ${sbBdr}`, color: txtSub }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor= darkMode ? '#334155' : '#D1D5DB'; e.currentTarget.style.background= darkMode ? '#1e2030' : '#F9FAFB'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor= sbBdr; e.currentTarget.style.background='transparent'; }}>
                     Create account
                   </button>
-                  <p className="text-[11px]" style={{ color:'#9CA3AF' }}>
+                  <p className="text-[11px]" style={{ color: txtMute }}>
                     You can still chat without signing in — history won't be saved.
                   </p>
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="px-4 py-6 text-center">
-                  <p className="text-[12px]" style={{ color:'#9CA3AF' }}>No conversations yet.<br />Start a new chat above!</p>
+                  <p className="text-[12px]" style={{ color: txtMute }}>No conversations yet.<br />Start a new chat above!</p>
                 </div>
               ) : (
                 Object.entries(grouped).map(([group, convs]) =>
                   convs.length === 0 ? null : (
                     <div key={group} className="mb-2">
-                      <p className="px-4 py-1 text-[10px] font-semibold uppercase" style={{ color:'#9CA3AF', letterSpacing:'.08em' }}>{group}</p>
+                      <p className="px-4 py-1 text-[10px] font-semibold uppercase" style={{ color: txtMute, letterSpacing:'.08em' }}>{group}</p>
                       {convs.map((conv) => (
                         <div key={conv._id}
                           className="group relative flex items-center mx-2 mb-0.5 rounded-lg cursor-pointer transition-all duration-150"
@@ -545,19 +578,19 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
                             background: activeConvId===conv._id ? 'rgba(68,87,245,0.08)' : 'transparent',
                             border: activeConvId===conv._id ? '1px solid rgba(68,87,245,0.2)' : '1px solid transparent',
                           }}
-                          onMouseEnter={(e) => { setHovConv(conv._id); if(activeConvId!==conv._id) e.currentTarget.style.background='rgba(0,0,0,0.03)'; }}
+                          onMouseEnter={(e) => { setHovConv(conv._id); if(activeConvId!==conv._id) e.currentTarget.style.background=hoverBg; }}
                           onMouseLeave={(e) => { setHovConv(null); if(activeConvId!==conv._id) e.currentTarget.style.background='transparent'; }}
                           onClick={() => onSelectConv(conv._id)}>
                           <span className="flex-1 px-3 py-2 text-[13px] truncate"
-                            style={{ color: activeConvId===conv._id ? '#4457F5' : '#374151' }}>
+                            style={{ color: activeConvId===conv._id ? '#5B6CF9' : txtSub }}>
                             {conv.title}
                           </span>
                           {hovConv===conv._id && (
                             <button onClick={(e) => { e.stopPropagation(); onDeleteConv(conv._id); }}
                               className="flex-shrink-0 mr-2 p-1 rounded transition-colors"
-                              style={{ color:'#D1D5DB' }}
+                              style={{ color: darkMode ? '#475569' : '#D1D5DB' }}
                               onMouseEnter={(e) => e.currentTarget.style.color='#DC2626'}
-                              onMouseLeave={(e) => e.currentTarget.style.color='#D1D5DB'}>
+                              onMouseLeave={(e) => e.currentTarget.style.color= darkMode ? '#475569' : '#D1D5DB'}>
                               <Ico d={D.trash} size={12} />
                             </button>
                           )}
@@ -570,62 +603,63 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
             </div>
 
             {/* User profile / footer */}
-            <div className="flex-shrink-0 p-3" style={{ borderTop:'1px solid #E5E7EB', position:'relative' }}>
+            <div className="flex-shrink-0 p-3" style={{ borderTop:`1px solid ${sbBdr}`, position:'relative' }}>
               {user ? (
                 <>
                   <button onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer transition-all" style={{ background: showUserMenu ? '#F3F4F6' : 'transparent' }}>
+                    className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer transition-all"
+                    style={{ background: showUserMenu ? (darkMode ? '#1e2030' : '#F3F4F6') : 'transparent' }}>
                     <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold text-white"
                       style={{ background:'linear-gradient(135deg,#5B6CF9,#4457F5)' }}>
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-[12px] font-semibold text-[#111827] truncate">{user.name}</p>
-                      <p className="text-[10px] truncate" style={{ color:'#9CA3AF' }}>{user.email}</p>
+                      <p className="text-[12px] font-semibold truncate" style={{ color: txtMain }}>{user.name}</p>
+                      <p className="text-[10px] truncate" style={{ color: txtMute }}>{user.email}</p>
                     </div>
                   </button>
                   
                   {showUserMenu && (
-                    <div className="absolute bottom-full left-3 right-3 mb-2 rounded-xl overflow-hidden" style={{ background:'#FFFFFF', boxShadow:'0 20px 60px rgba(0,0,0,0.12)', zIndex:50, minWidth:280 }}>
+                    <div className="absolute bottom-full left-3 right-3 mb-2 rounded-xl overflow-hidden"
+                      style={{ background: menuBg, boxShadow:'0 20px 60px rgba(0,0,0,0.18)', zIndex:50, minWidth:280, border:`1px solid ${sbBdr}` }}>
                       {/* User info header */}
-                      <div className="px-4 py-3 border-b" style={{ borderColor:'#E5E7EB' }}>
+                      <div className="px-4 py-3 border-b" style={{ borderColor: sbBdr }}>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white" style={{ background:'linear-gradient(135deg,#5B6CF9,#4457F5)' }}>
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-[#111827] truncate">{user.name}</p>
-                            <p className="text-[12px] truncate" style={{ color:'#6B7280' }}>{user.email}</p>
+                            <p className="text-[13px] font-semibold truncate" style={{ color: txtMain }}>{user.name}</p>
+                            <p className="text-[12px] truncate" style={{ color: txtMute }}>{user.email}</p>
                           </div>
-                          <Ico d={D.close} size={16} className="cursor-pointer" style={{color:'#9CA3AF'}} onClick={() => setShowUserMenu(false)} />
+                          <Ico d={D.close} size={16} className="cursor-pointer" style={{color: txtMute}} onClick={() => setShowUserMenu(false)} />
                         </div>
                       </div>
                       
                       {/* Menu items */}
                       <div className="py-1">
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#374151] hover:bg-[#F3F4F6] transition-colors"
-                          style={{ background:'transparent' }}>
-                          <Ico d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' size={16} />
-                          Profile
-                        </button>
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#374151] hover:bg-[#F3F4F6] transition-colors"
-                          style={{ background:'transparent' }}>
-                          <Ico d='M19.14 12.94c.4-1.16.74-2.36.9-3.54h-2.16a5.884 5.884 0 0 1-1.51 3.54h2.77zM15.5 5.86a5.884 5.884 0 0 1 1.51 3.54h2.77c-.16-1.18-.5-2.38-.9-3.54h-2.38zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z' size={16} />
-                          Settings
-                        </button>
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#374151] hover:bg-[#F3F4F6] transition-colors"
-                          style={{ background:'transparent' }}>
-                          <Ico d='M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z' size={16} />
-                          Help
-                        </button>
+                        {[['Profile','M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'],
+                          ['Settings','M19.14 12.94c.4-1.16.74-2.36.9-3.54h-2.16a5.884 5.884 0 0 1-1.51 3.54h2.77zM15.5 5.86a5.884 5.884 0 0 1 1.51 3.54h2.77c-.16-1.18-.5-2.38-.9-3.54h-2.38zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z'],
+                          ['Help','M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z'],
+                        ].map(([label, ico]) => (
+                          <button key={label} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] transition-colors"
+                            style={{ color: txtSub, background:'transparent' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = menuItemHov}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                            <Ico d={ico} size={16} />{label}
+                          </button>
+                        ))}
                       </div>
                       
                       {/* Divider */}
-                      <div style={{ height:'1px', background:'#E5E7EB' }} />
+                      <div style={{ height:'1px', background: sbBdr }} />
                       
                       {/* Log out */}
                       <button onClick={() => { setShowUserMenu(false); onLogout(); }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#DC2626] hover:bg-[#F3F4F6] transition-colors" style={{ background:'transparent' }}>
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#DC2626] transition-colors"
+                        style={{ background:'transparent' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = menuItemHov}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                         <Ico d={D.logout} size={16} />
                         Log out
                       </button>
@@ -633,7 +667,7 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
                   )}
                 </>
               ) : (
-                <p className="text-center text-[10px]" style={{ color:'#9CA3AF' }}>
+                <p className="text-center text-[10px]" style={{ color: txtMute }}>
                   Aroha · India Idsp Surveillance
                 </p>
               )}
@@ -645,25 +679,33 @@ function Sidebar({ open, user, conversations, activeConvId, onNewChat, onSelectC
   );
 }
 
-// ── Chat Navbar ───────────────────────────────────────────────────
-function ChatNavbar({ onToggleSidebar, sidebarOpen, onClear, onExport, count, user, onShowAuth, onToggleSidebarClose }) {
+// ── Chat Navbar ────────────────────────────────────────────
+function ChatNavbar({ onToggleSidebar, sidebarOpen, onClear, onExport, count, user, onShowAuth, onToggleSidebarClose, darkMode, onToggleTheme }) {
   const [hov, setHov] = useState(null);
   const btns = [
     { id:'exp', icon:D.export, tip:'Export', fn:onExport },
     { id:'clr', icon:D.trash,  tip:'Clear',  fn:onClear  },
   ];
 
+  const navBg    = darkMode ? '#171717' : '#FFFFFF';
+  const navBdr   = darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
+  const btnBg    = darkMode ? '#2f2f2f' : '#F9FAFB';
+  const btnBgHov = darkMode ? '#3a3a3a' : '#F3F4F6';
+  const btnBdr   = darkMode ? 'rgba(255,255,255,0.1)' : '#E5E7EB';
+  const btnClr   = darkMode ? '#8e8ea0' : '#9CA3AF';
+  const btnHovCl = darkMode ? '#ececec' : '#374151';
+
   return (
     <header className="relative flex-shrink-0 flex items-center justify-between z-10"
-      style={{ height:54, padding:'0 14px 0 12px', background:'#FFFFFF', borderBottom:'1px solid #E5E7EB' }}>
+      style={{ height:54, padding:'0 14px 0 12px', background: navBg, borderBottom:`1px solid ${navBdr}` }}>
       <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background:'#E8002D' }} />
 
       <div className="flex items-center gap-2">
         <button onClick={() => sidebarOpen ? onToggleSidebarClose() : onToggleSidebar()}
           className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
-          style={{ color:'#9CA3AF', background:'transparent' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background='#F3F4F6'; e.currentTarget.style.color='#374151'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#9CA3AF'; }}>
+          style={{ color: btnClr, background:'transparent' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background=btnBgHov; e.currentTarget.style.color=btnHovCl; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color=btnClr; }}>
           <Ico d={sidebarOpen ? D.close : D.menu} size={18} />
         </button>
       </div>
@@ -671,7 +713,8 @@ function ChatNavbar({ onToggleSidebar, sidebarOpen, onClear, onExport, count, us
       <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-[7px]">
         <span className="inline-block w-[5px] h-[5px] rounded-full"
           style={{ background:'#0D9488', boxShadow:'0 0 5px #0D9488', animation:'chatPulse 2s infinite' }} />
-        <span className="text-[11px] font-medium hidden sm:inline" style={{ color:'#9CA3AF', letterSpacing:'.04em' }}>Surveillance active</span>
+        <span className="text-[11px] font-medium hidden sm:inline"
+          style={{ color: darkMode ? '#64748b' : '#9CA3AF', letterSpacing:'.04em' }}>Surveillance active</span>
       </div>
 
       {/* Right actions */}
@@ -681,9 +724,9 @@ function ChatNavbar({ onToggleSidebar, sidebarOpen, onClear, onExport, count, us
             onMouseEnter={() => setHov(b.id)} onMouseLeave={() => setHov(null)}
             className="w-[28px] h-[28px] rounded-[5px] flex items-center justify-center cursor-pointer transition-all duration-150"
             style={{
-              background: hov===b.id?'#F3F4F6':'#F9FAFB',
-              border: '1px solid #E5E7EB',
-              color: hov===b.id?'#374151':'#9CA3AF',
+              background: hov===b.id ? btnBgHov : btnBg,
+              border: `1px solid ${btnBdr}`,
+              color: hov===b.id ? btnHovCl : btnClr,
             }}>
             <Ico d={b.icon} size={13} />
           </button>
@@ -695,6 +738,44 @@ function ChatNavbar({ onToggleSidebar, sidebarOpen, onClear, onExport, count, us
             Sign in
           </button>
         )}
+
+        {/* ── Theme Toggle ── */}
+        <button
+          id="chat-theme-toggle"
+          onClick={onToggleTheme}
+          aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="relative w-[28px] h-[28px] rounded-[5px] flex items-center justify-center cursor-pointer transition-all duration-150 overflow-hidden"
+          style={{
+            background: darkMode ? '#1e293b' : '#F9FAFB',
+            border: `1px solid ${darkMode ? '#334155' : '#E5E7EB'}`,
+            color: darkMode ? '#fbbf24' : '#9CA3AF',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = darkMode ? '#263348' : '#F3F4F6'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = darkMode ? '#1e293b' : '#F9FAFB'; }}
+        >
+          {/* Sun */}
+          <span style={{ position:'absolute', transition:'transform 0.3s ease, opacity 0.3s ease',
+            transform: darkMode ? 'rotate(0deg) scale(1)' : 'rotate(90deg) scale(0.5)',
+            opacity: darkMode ? 1 : 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </span>
+          {/* Moon */}
+          <span style={{ position:'absolute', transition:'transform 0.3s ease, opacity 0.3s ease',
+            transform: darkMode ? 'rotate(-90deg) scale(0.5)' : 'rotate(0deg) scale(1)',
+            opacity: darkMode ? 0 : 1 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+            </svg>
+          </span>
+        </button>
       </div>
     </header>
   );
@@ -713,7 +794,26 @@ function ChatPageInner() {
   const [activeConvId, setActiveConvId]   = useState(null);
   const [msgs, setMsgs]               = useState([]);
   const [loading, setLoad]            = useState(false);
+  const [darkMode, setDarkMode]       = useState(false);
+  const [mounted, setMounted]         = useState(false);
   const bottomRef                     = useRef(null);
+
+  // Sync theme from localStorage on mount (shared with Navbar)
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = saved ? saved === 'dark' : prefersDark;
+    setDarkMode(isDark);
+    document.documentElement.classList.toggle('dark', isDark);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -849,37 +949,41 @@ function ChatPageInner() {
     a.click();
   };
 
+  // Derive theme colours for inline-styled children
+  const bg = darkMode ? '#212121' : '#FFFFFF';
+
   return (
+    <ThemeCtx.Provider value={darkMode}>
     <>
       <style>{`
-        body.chat-page-body { background: #FFFFFF; }
+        body.chat-page-body { background: ${bg}; }
         @keyframes chatFadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes chatFadeIn { from{opacity:0} to{opacity:1} }
         @keyframes chatPulse  { 0%,100%{opacity:1} 50%{opacity:.3} }
         @keyframes chatBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px);opacity:1} }
         .chat-scroll::-webkit-scrollbar { width: 4px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-        .chat-scroll::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 2px; }
-        .chat-scroll::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
-        .md p { margin: 0 0 8px; color: #1F2937; }
-        .md h2, .md h3 { color: #111827; font-weight: 600; margin: 14px 0 6px; }
-        .md strong { color: #111827; }
-        .md code { background: #F3F4F6; color: #374151; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-        .md pre { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 8px 0; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: ${darkMode ? '#3a3a3a' : '#E5E7EB'}; border-radius: 2px; }
+        .chat-scroll::-webkit-scrollbar-thumb:hover { background: ${darkMode ? '#555555' : '#D1D5DB'}; }
+        .md p { margin: 0 0 8px; color: ${darkMode ? '#acacac' : '#1F2937'}; }
+        .md h2, .md h3 { color: ${darkMode ? '#ececec' : '#111827'}; font-weight: 600; margin: 14px 0 6px; }
+        .md strong { color: ${darkMode ? '#ececec' : '#111827'}; }
+        .md code { background: ${darkMode ? '#3a3a3a' : '#F3F4F6'}; color: ${darkMode ? '#93c5fd' : '#374151'}; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+        .md pre { background: ${darkMode ? '#2f2f2f' : '#F9FAFB'}; border: 1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB'}; border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 8px 0; }
         .md pre code { background: none; padding: 0; }
         .md ul { margin: 6px 0 10px 20px; }
-        .md li { color: #374151; margin-bottom: 3px; }
+        .md li { color: ${darkMode ? '#8e8ea0' : '#374151'}; margin-bottom: 3px; }
         .md table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
-        .md th { background: #F9FAFB; color: #374151; font-weight: 600; padding: 7px 10px; border: 1px solid #E5E7EB; text-align: left; }
-        .md td { padding: 7px 10px; border: 1px solid #E5E7EB; color: #374151; }
-        .md hr { border: none; border-top: 1px solid #E5E7EB; margin: 14px 0; }
+        .md th { background: ${darkMode ? '#2f2f2f' : '#F9FAFB'}; color: ${darkMode ? '#8e8ea0' : '#374151'}; font-weight: 600; padding: 7px 10px; border: 1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB'}; text-align: left; }
+        .md td { padding: 7px 10px; border: 1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB'}; color: ${darkMode ? '#acacac' : '#374151'}; }
+        .md hr { border: none; border-top: 1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB'}; margin: 14px 0; }
       `}</style>
 
       {authModal && (
         <AuthModal defaultTab={authModal} onClose={() => setAuthModal(null)} onAuth={handleAuth} />
       )}
 
-      <div className="flex" style={{ height:'100dvh', overflow:'hidden', background:'#FFFFFF' }}>
+      <div className="flex" style={{ height:'100dvh', overflow:'hidden', background: bg }}>
         <Sidebar
           open={sidebarOpen}
           user={user}
@@ -893,7 +997,7 @@ function ChatPageInner() {
           onToggleSidebar={() => setSidebarOpen(false)}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden" style={{ background:'#FFFFFF' }}>
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ background: bg }}>
           <ChatNavbar
             sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen((o) => !o)}
@@ -903,10 +1007,12 @@ function ChatPageInner() {
             count={msgs.length}
             user={user}
             onShowAuth={(tab) => setAuthModal(tab)}
+            darkMode={darkMode}
+            onToggleTheme={mounted ? toggleTheme : undefined}
           />
 
           {/* Scroll area */}
-          <div className="flex-1 overflow-y-auto relative z-[1] chat-scroll" style={{ background:'#FFFFFF' }}>
+          <div className="flex-1 overflow-y-auto relative z-[1] chat-scroll" style={{ background: bg }}>
             <div className="flex flex-col min-h-full" style={{ maxWidth:760, margin:'0 auto', padding:'24px 18px 8px' }}>
               {msgs.length === 0 ? (
                 <Welcome onChip={send} />
@@ -928,6 +1034,7 @@ function ChatPageInner() {
         </div>
       </div>
     </>
+    </ThemeCtx.Provider>
   );
 }
 

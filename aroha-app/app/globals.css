@@ -19,11 +19,24 @@
 
   body {
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    background-color: #ffffff;
-    color: #1E293B;
+    background-color: #212121;
+    color: #ececec;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* ── Light mode body ── */
+  html:not(.dark) body {
+    background-color: #ffffff;
+    color: #1E293B;
+  }
+
+  /* ── Dark mode body ── */
+  html.dark body {
+    background-color: #212121;
+    color: #ececec;
   }
 
   ::selection {
@@ -43,54 +56,74 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
   }
+
+  html.dark ::-webkit-scrollbar-thumb { background: #334155; }
+  html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
 }
 
-/* ── Chat page body override (clean white background like landing page) ── */
+/* ── Chat page body override ── */
 .chat-page-body {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
+}
+html.dark .chat-page-body,
+html.dark body.chat-page-body {
+  background-color: #212121;
+  color: #ececec;
 }
 
-/* ── Chat interface light theme ── */
+body.chat-page-body {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ── Chat interface theme ── */
 .chat-scroll {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
+}
+html.dark .chat-scroll {
+  background-color: #212121;
 }
 
 .chat-message-user {
-  background: linear-gradient(135deg, #5B6CF9, #4457F5) !important;
-  color: #ffffff !important;
+  background: linear-gradient(135deg, #5B6CF9, #4457F5);
+  color: #ffffff;
 }
 
 .chat-input-bar {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
+}
+html.dark .chat-input-bar {
+  background-color: #0d0d1a;
 }
 
 .chat-input-field {
-  background-color: #f8f8f8 !important;
-  border: 1px solid #e0e0e0 !important;
-  color: #1e293b !important;
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  color: #1e293b;
+}
+html.dark .chat-input-field {
+  background-color: #13131f;
+  border: 1px solid #1e2030;
+  color: #e2e8f0;
 }
 
 .chat-input-field:focus {
-  border: 1px solid #5B6CF9 !important;
-  box-shadow: 0 0 0 3px rgba(91, 108, 249, 0.07) !important;
-}
-
-html.chat-page-body,
-body.chat-page-body {
-  color: #1E293B !important;
-  overflow: hidden !important;
-  height: 100% !important;
+  border: 1px solid #5B6CF9;
+  box-shadow: 0 0 0 3px rgba(91, 108, 249, 0.07);
 }
 
 /* ── Narrow scrollbar for chat scroll area ── */
-.chat-scroll::-webkit-scrollbar { width: 6px; }
+.chat-scroll::-webkit-scrollbar { width: 4px; }
 .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-.chat-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+.chat-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 2px; }
 .chat-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+html.dark .chat-scroll::-webkit-scrollbar-thumb { background: #334155; }
+html.dark .chat-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
 
 /* ──────────────────────────────────────────────────────────────
    MARKDOWN STYLES  (exact match to index.html .md rules)
 ────────────────────────────────────────────────────────────── */
+/* ── Markdown styles — light mode ── */
 .md p           { margin-bottom: 10px; line-height: 1.75; color: #475569; }
 .md p:last-child{ margin-bottom: 0; }
 .md strong      { font-weight: 600; color: #1e293b; }
@@ -110,6 +143,21 @@ body.chat-page-body {
 .md th          { background: #f8fafc; padding: 7px 12px; text-align: left; font-weight: 600; border: 1px solid #e2e8f0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
 .md td          { padding: 6px 12px; border: 1px solid #e2e8f0; color: #475569; }
 .md tr:nth-child(even) td { background: #f8fafc; }
+
+/* ── Markdown styles — dark mode ── */
+html.dark .md p           { color: #cbd5e1; }
+html.dark .md strong      { color: #f8fafc; }
+html.dark .md em          { color: #94a3b8; }
+html.dark .md li          { color: #94a3b8; }
+html.dark .md code        { background: #1e293b; color: #93c5fd; }
+html.dark .md pre         { background: #0f172a; border-color: #1e293b; }
+html.dark .md pre code    { color: #cbd5e1; }
+html.dark .md h2,
+html.dark .md h3          { color: #f1f5f9; }
+html.dark .md hr          { border-top-color: #1e293b; }
+html.dark .md th          { background: #1e293b; border-color: #334155; color: #94a3b8; }
+html.dark .md td          { border-color: #334155; color: #cbd5e1; }
+html.dark .md tr:nth-child(even) td { background: #13131f; }
 
 /* ─── Component layer ─── */
 @layer components {

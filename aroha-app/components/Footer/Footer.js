@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -24,29 +27,38 @@ const FOOTER_LINKS = {
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const [darkMode, setDarkMode] = useState(true);
+
+  useEffect(() => {
+    const sync = () => setDarkMode(document.documentElement.classList.contains('dark'));
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const bg      = darkMode ? '#212121' : '#ffffff';
+  const cardBg  = darkMode ? '#2f2f2f' : '#f8fafc';
+  const border  = darkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0';
+  const textMain= darkMode ? '#ececec'  : '#0f172a';
+  const textSub = darkMode ? '#8e8ea0'  : '#475569';
+  const textMute= darkMode ? '#6b7280'  : '#94a3b8';
 
   return (
-    <footer className="relative mt-20 bg-slate-50">
+    <footer className="relative mt-20 transition-colors duration-300" style={{ background: bg, borderTop: `1px solid ${border}` }}>
       {/* Top gradient line */}
-      <div
-        className="h-px"
-        style={{
-          background:
-            'linear-gradient(90deg, transparent, rgba(0,0,0,0.04) 30%, rgba(91,108,249,0.2) 50%, rgba(0,0,0,0.04) 70%, transparent)',
-        }}
-      />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(91,108,249,0.15) 50%, transparent)' }} />
 
       {/* Main grid */}
       <div className="max-w-[1200px] mx-auto px-6 pt-16 pb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12">
         {/* ── Brand column ── */}
         <div className="flex flex-col gap-4">
-          {/* Logo */}
           <Link href="/" className="inline-flex items-center gap-2.5">
             <Image src="/aroha-logo.jpeg" alt="Aroha logo" width={40} height={40} className="rounded-[10px] object-cover" />
-            <span className="text-lg font-black text-slate-900 tracking-[0.06em]">Aroha</span>
+            <span className="text-lg font-black tracking-[0.06em]" style={{ color: '#ffffff' }}>Aroha</span>
           </Link>
 
-          <p className="text-[13.5px] text-slate-500 leading-[1.75] max-w-[270px]">
+          <p className="text-[13.5px] leading-[1.75] max-w-[270px]" style={{ color: '#475569' }}>
             India's Ai-powered disease surveillance intelligence platform — real-time insights from Idsp data across all states.
           </p>
 
@@ -74,7 +86,10 @@ export default function Footer() {
                 key={label}
                 href={href}
                 aria-label={label}
-                className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:-translate-y-0.5 shadow-sm transition-all duration-150"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5"
+                style={{ background: '#13131f', border: '1px solid rgba(255,255,255,0.08)', color: '#334155' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                   <path d={path} />
@@ -87,7 +102,7 @@ export default function Footer() {
         {/* ── Link columns ── */}
         {Object.entries(FOOTER_LINKS).map(([section, items]) => (
           <div key={section} className="flex flex-col gap-4">
-            <h3 className="text-[11.5px] font-bold text-slate-800 tracking-[0.08em]">
+            <h3 className="text-[11.5px] font-bold tracking-[0.08em]" style={{ color: '#94a3b8' }}>
               {section}
             </h3>
             <ul className="flex flex-col gap-2.5 list-none">
@@ -97,7 +112,10 @@ export default function Footer() {
                     href={href}
                     target={external ? '_blank' : undefined}
                     rel={external ? 'noopener noreferrer' : undefined}
-                    className="text-[13.5px] text-slate-500 hover:text-slate-800 transition-colors duration-150"
+                    className="text-[13.5px] transition-colors duration-150"
+                    style={{ color: '#334155' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#e2e8f0'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#334155'; }}
                   >
                     {label}
                   </a>
@@ -110,9 +128,9 @@ export default function Footer() {
 
       {/* ── Bottom bar ── */}
       <div className="max-w-[1200px] mx-auto px-6 pb-7">
-        <div className="h-px bg-slate-200 mb-6" />
+        <div className="h-px mb-6" style={{ background: 'rgba(255,255,255,0.06)' }} />
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="text-[12.5px] text-slate-400">
+          <p className="text-[12.5px]" style={{ color: '#334155' }}>
             © {year} Aroha. Built with data from{' '}
             <a
               href="https://idsp.mohfw.gov.in"
