@@ -24,11 +24,11 @@ No name. No phone number. Just a signal from your neighbourhood.
 
 ## Core Features
 
-- 🗺️ Hyperlocal symptom heatmaps at ward/mohalla level
-- 🔒 Fully anonymous reporting — zero identity collection
-- 🤖 AI-powered anomaly detection with seasonal baselines
-- 📲 Lightweight — designed for low-data and low-smartphone environments
-- 🏥 Direct alerts to ASHA workers and local health officials
+- Hyperlocal symptom heatmaps at ward/mohalla level
+- Fully anonymous reporting — zero identity collection
+- AI-powered anomaly detection with seasonal baselines
+- Lightweight — designed for low-data and low-smartphone environments
+- Direct alerts to ASHA workers and local health officials
 
 ---
 
@@ -40,7 +40,7 @@ No name. No phone number. Just a signal from your neighbourhood.
 
 ## Project Status
 
-🌱 Early stage — actively building.
+Early stage — actively building.
 
 ---
 
