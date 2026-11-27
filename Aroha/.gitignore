@@ -1,20 +1,70 @@
-# Secrets - NEVER commit these
+# ==========================================
+# SECRETS - NEVER COMMIT
+# ==========================================
 .env
+.env.*
 *.env
+.env.txt
+*.env.txt
 
-# Python cache
+# Allow safe environment variable templates
+!.env.example
+!*.env.example
+
+# ==========================================
+# PYTHON CACHE
+# ==========================================
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
-# Large data files - already in Pinecone
+# ==========================================
+# LARGE DATA FILES
+# ==========================================
 idsp_data_final.csv
 
-# Virtual environments
+# ==========================================
+# VIRTUAL ENVIRONMENTS
+# ==========================================
 venv/
 .venv/
 env/
 
-# IDE
+# ==========================================
+# IDE AND LOCAL TOOL CONFIGURATION
+# ==========================================
 .claude/
 .vscode/
+
+# ==========================================
+# NODE.JS
+# ==========================================
+node_modules/
+
+# ==========================================
+# NEXT.JS
+# ==========================================
+.next/
+out/
+build/
+
+# ==========================================
+# TESTING AND COVERAGE
+# ==========================================
+coverage/
+
+# ==========================================
+# DEBUG LOGS
+# ==========================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# MISCELLANEOUS
+# ==========================================
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
