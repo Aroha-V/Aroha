@@ -9,6 +9,7 @@ const FOOTER_LINKS = {
     { label: 'Features',     href: '#features'     },
     { label: 'How it works', href: '#how-it-works' },
     { label: 'Data sources', href: '#stats'        },
+    { label: 'About us',     href: '/about'        },
     { label: 'Changelog',    href: '#'             },
   ],
   Platform: [
@@ -18,11 +19,13 @@ const FOOTER_LINKS = {
     { label: 'Api docs',    href: '#'         },
   ],
   'Data & privacy': [
-    { label: 'Privacy policy', href: '#'                              },
-    { label: 'Terms of use',   href: '#'                              },
-    { label: 'Idsp portal',    href: 'https://idsp.mohfw.gov.in', external: true },
-    { label: 'Data sources',   href: '#'                              },
-  ],
+  { label: 'Privacy policy', href: '/privacy' },
+  { label: 'Terms of use', href: '/terms' },
+  { label: 'Medical disclaimer', href: '/medical-disclaimer' },
+  { label: 'Cookie policy', href: '/cookies' },
+  { label: 'Idsp portal', href: '...', external: true },
+  { label: 'Data sources', href: '/sources' },
+],
 };
 
 export default function Footer() {

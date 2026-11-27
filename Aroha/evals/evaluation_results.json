@@ -1,0 +1,23 @@
+[
+    {
+        "id": "TC001",
+        "status": "PASS",
+        "actual": {
+            "state": "Andhra Pradesh",
+            "district": "Krishna",
+            "disease": "Alcohol Poisoning",
+            "cases": 44
+        },
+        "failure_layer": null,
+        "notes": "AROHA returned the expected case count and matching outbreak details."
+    },
+    {
+        "id": "TC002",
+        "status": "PASS",
+        "actual": {
+            "deaths": 18
+        },
+        "failure_layer": null,
+        "notes": "AROHA correctly returned 18 deaths."
+    }
+]

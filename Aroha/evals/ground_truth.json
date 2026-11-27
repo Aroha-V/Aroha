@@ -1,0 +1,176 @@
+[
+  {
+    "id": "TC001",
+    "category": "exact_retrieval",
+    "question": "How many cases of Alcohol Poisoning were reported in Krishna, Andhra Pradesh?",
+    "expected": {
+      "state": "Andhra Pradesh",
+      "district": "Krishna",
+      "disease": "Alcohol Poisoning",
+      "cases": 44
+    }
+  },
+  {
+    "id": "TC002",
+    "category": "exact_retrieval",
+    "question": "How many deaths were reported in the Alcohol Poisoning outbreak in Krishna, Andhra Pradesh?",
+    "expected": {
+      "deaths": 18
+    }
+  },
+  {
+    "id": "TC003",
+    "category": "exact_retrieval",
+    "question": "How many cases and deaths were reported for Alcohol Poisoning in Krishna, Andhra Pradesh?",
+    "expected": {
+      "cases": 44,
+      "deaths": 18
+    }
+  },
+  {
+    "id": "TC004",
+    "category": "date_retrieval",
+    "question": "When did the Alcohol Poisoning outbreak in Krishna, Andhra Pradesh start?",
+    "expected": {
+      "start_of_outbreak": "31/12/11"
+    }
+  },
+  {
+    "id": "TC005",
+    "category": "exact_retrieval",
+    "question": "How many Chickenpox cases were reported in Gaya, Bihar?",
+    "expected": {
+      "cases": 16
+    }
+  },
+  {
+    "id": "TC006",
+    "category": "exact_retrieval",
+    "question": "How many Food Poisoning cases were reported in Kolar, Karnataka?",
+    "expected": {
+      "cases": 29
+    }
+  },
+  {
+    "id": "TC007",
+    "category": "exact_retrieval",
+    "question": "How many Food Poisoning cases were reported in Koppal, Karnataka?",
+    "expected": {
+      "cases": 52
+    }
+  },
+  {
+    "id": "TC008",
+    "category": "exact_retrieval",
+    "question": "How many Measles cases were reported in Neemuch, Madhya Pradesh?",
+    "expected": {
+      "cases": 24
+    }
+  },
+  {
+    "id": "TC009",
+    "category": "exact_retrieval",
+    "question": "How many Food poisoning cases were reported in East Sikkim, Sikkim?",
+    "expected": {
+      "cases": 82,
+      "deaths": 1
+    }
+  },
+  {
+    "id": "TC010",
+    "category": "exact_retrieval",
+    "question": "How many Dengue cases were reported in Thoothukudi, Tamil Nadu?",
+    "expected": {
+      "cases": 42
+    }
+  },
+  {
+  "id": "TC011",
+  "category": "aggregation",
+  "question": "How many Food Poisoning cases were reported in Karnataka in 2024?",
+  "expected": {
+    "state": "Karnataka",
+    "disease": "Food Poisoning",
+    "year": 2024,
+    "records": 37,
+    "cases": 1890
+  }
+},
+{
+  "id": "TC012",
+  "category": "ranking",
+  "question": "Which district had the highest number of Food Poisoning cases in Karnataka in 2024?",
+  "expected": {
+    "state": "Karnataka",
+    "disease": "Food Poisoning",
+    "year": 2024,
+    "district": "Yadgir",
+    "cases": 172,
+    "date": "15-06-2024"
+  }
+},
+{
+  "id": "TC013",
+  "category": "district_aggregation",
+  "question": "How many Food Poisoning cases were reported in Raichur, Karnataka in 2024?",
+  "expected": {
+    "state": "Karnataka",
+    "district": "Raichur",
+    "disease": "Food Poisoning",
+    "year": 2024,
+    "records": 5,
+    "cases": 128
+  }
+},
+{
+  "id": "TC014",
+  "category": "grouped_aggregation_ranking",
+  "question": "Which district had the highest total number of Food Poisoning cases in Karnataka in 2024?",
+  "expected": {
+    "state": "Karnataka",
+    "disease": "Food Poisoning",
+    "year": 2024,
+    "district": "Ramanagara",
+    "total_cases": 246,
+    "records": 2
+  }
+},
+{
+  "id": "TC015",
+  "category": "date_retrieval",
+  "question": "How many Measles cases were reported in Nainital, Uttarakhand for the outbreak that started on 26/12/11?",
+  "expected": {
+    "state": "Uttarakhand",
+    "district": "Nainital",
+    "disease": "Measles",
+    "start_of_outbreak": "26/12/11",
+    "cases": 41,
+    "deaths": 0
+  }
+},
+{
+  "id": "TC016",
+  "category": "no_result",
+  "question": "How many Malaria cases were reported in Nainital, Uttarakhand?",
+  "expected": {
+    "state": "Uttarakhand",
+    "district": "Nainital",
+    "disease": "Malaria",
+    "records": 0,
+    "answer_type": "no_matching_record"
+  }
+},
+{
+  "id": "TC017",
+  "category": "spelling_variation",
+  "question": "How many Dengue outbraks were reported in Thoothukudi, Tamil Nadu on 01/01/12?",
+  "expected": {
+    "state": "Tamil Nadu",
+    "district": "Thoothukudi",
+    "disease": "Dengue",
+    "start_of_outbreak": "01/01/12",
+    "cases": 42,
+    "deaths": 0
+  }
+}
+]
